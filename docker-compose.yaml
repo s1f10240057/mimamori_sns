@@ -6,8 +6,11 @@ services:
    - 8000:8000
   volumes:
    - ./src:/code
+  working_dir: /code
   depends_on:
    - db
+  environment:
+      - PYTHONPATH=/code
  db:
   image: postgres:15.4
   volumes:

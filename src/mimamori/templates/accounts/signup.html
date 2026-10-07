@@ -1,0 +1,41 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <!-- <link rel="stylesheet" href="{% static 'mimamori/css/common.css' %}"> -->
+  <style>
+    body{
+      color: black;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+ 
+<div class="signup-page">
+  <h1>会員登録</h1>
+  <br>
+  <form method="POST">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    {% for field in form %}
+    {{ field.label }}
+    <br>
+    {{ field }}
+    <br>
+    {{ field.errors }}
+    <br>
+    {% endfor %}
+    <div class="mt-3">
+      <button type="submit" class="btn btn-primary">登録</button>
+      <a href="{% url 'mimamori:index' %}" class="btn btn-secondary">戻る</a>
+      </div>
+    </form>
+  </div>
+
+
+</body>
+</html>

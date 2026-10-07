@@ -4,6 +4,10 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+LOGIN_REDIRECT_URL = "mimamori:index"   # ログイン後の遷移先
+LOGOUT_REDIRECT_URL = "mimamori:index" 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
@@ -15,6 +19,11 @@ SECRET_KEY = 'django-insecure-a!h9ap)$ps38h+(g!3=ui7xx8z1vp#own+r_1jmr-yw$nr8p%0
 DEBUG = True
 ALLOWED_HOSTS = ['backend', 'localhost', '127.0.0.1']
 
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost",
+    "http://localhost:8080",     # 実際にブラウザでアクセスしているURLに合わせる
+    "http://127.0.0.1:8080",
+]
 
 # Application definition
 
@@ -26,7 +35,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'mimamori',
+    'accounts'
 ]
+
+AUTH_USER_MODEL = "accounts.User"
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

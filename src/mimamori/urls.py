@@ -1,12 +1,14 @@
 from django.contrib import admin
 from django.urls import path, include
-import mimamori.views
-import accounts.views
+from . import views
+
+
+
+app_name = "mimamori"
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    # path('admin/', admin.site.urls),
     # path('top', mimamori.views.root),
     # path('mimamori/', include('mimamori.urls')),
-    path('accounts/', include("accounts.urls")),
-    path('mimamori/', include("mimamori.urls"))
+    path('index/', views.index,name = "index")
 ]
