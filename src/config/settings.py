@@ -134,3 +134,6 @@ DATABASES = {
     'PORT': 5432,
     }
 }
+
+MEDIA_URL = '/photos/'
+MEDIA_ROOT = BASE_DIR.parent / 'photos'

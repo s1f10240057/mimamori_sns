@@ -5,12 +5,12 @@ services:
   ports:
    - 8000:8000
   volumes:
-   - ./src:/code
-  working_dir: /code
+   - .:/code
+  working_dir: /code/src
   depends_on:
    - db
   environment:
-      - PYTHONPATH=/code
+      - PYTHONPATH=/code/src
  db:
   image: postgres:15.4
   volumes:
