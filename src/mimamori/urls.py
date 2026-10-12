@@ -10,5 +10,7 @@ urlpatterns = [
     # path('admin/', admin.site.urls),
     # path('top', mimamori.views.root),
     # path('mimamori/', include('mimamori.urls')),
-    path('index/', views.index,name = "index")
+    path('index/', views.index, name = "index"),
+    path('timeline/', views.timeline, name = "timeline"),
+    path('postAPI/', views.postPhotoAPI, name = "photo")
 ]
