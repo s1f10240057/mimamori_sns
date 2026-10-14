@@ -7,6 +7,15 @@
 </head>
 <body>
     <h1>タイムライン</h1>
+    {% if user_pair %}
+    <div>
+        <a href="{% querystring filter='pair' %}">
+            自分のペアの画像だけ表示する
+        </a>
+    </div>
+    {% else%}
+    <p>ペアがいません！！！</p>
+    {% endif %}
 
     <div>
         <!-- 確実にフォームの中に csrf_token を配置する -->

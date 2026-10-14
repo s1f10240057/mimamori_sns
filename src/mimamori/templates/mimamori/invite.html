@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    {{inviter.name}}さんから招待が来ています！！
+    <div >
+        {% csrf_token %}
+        <button id="becamePairBtn">ペアになる</button>
+    </div>
+    <script>
+        const becamePairBtn = document.getElementById("becamePairBtn");
+        becamePairBtn.addEventListener("click", async ()=>{
+            const token = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            try {
+                const response = await fetch("{% url 'mimamori:makePair' %}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': token,
+                        
+                    },
+                    body: JSON.stringify({ token: "{{ token }}" }),
+                });
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+                const data = await response.json();
+                if (data.success === true) {
+                    alert("ペアになりました！！！");
+                } else {
+                    alert("登録に失敗しました。もう一度やり直してください");
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert("通信エラーが発生しました");
+            }
+        });
+    </script>
+</body>
+</html>

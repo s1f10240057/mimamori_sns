@@ -12,5 +12,8 @@ urlpatterns = [
     # path('mimamori/', include('mimamori.urls')),
     path('index/', views.index, name = "index"),
     path('timeline/', views.timeline, name = "timeline"),
-    path('postAPI/', views.postPhotoAPI, name = "photo")
+    path('postAPI/', views.postPhotoAPI, name = "photo"),
+    path('getPairTokenAPI/', views.getPairTokenAPI, name = "getPairToken"),
+    path('makePairAPI/', views.makePairAPI, name = "makePair"),
+    path('invite/<str:token>', views.invite, name = "invite"),
 ]
