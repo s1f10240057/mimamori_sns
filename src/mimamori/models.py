@@ -14,7 +14,12 @@ def generate_invitation_token() -> str:
     return secrets.token_urlsafe(32)
 
 class Photo(models.Model):
-    who_id = models.IntegerField()
+    # who_id = models.IntegerField()
+    posted_user = models.ForeignKey(
+            settings.AUTH_USER_MODEL,
+            on_delete=models.CASCADE,
+            default=None
+    )
     image = models.ImageField(upload_to='photos/')
     created_at = models.DateTimeField(default=timezone.now)
 
