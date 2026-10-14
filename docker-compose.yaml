@@ -11,6 +11,7 @@ services:
    - db
   environment:
       - PYTHONPATH=/code/src
+  user: "${UID:-1000}:${GID:-1000}"
  db:
   image: postgres:15.4
   volumes:

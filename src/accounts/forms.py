@@ -10,11 +10,13 @@ class SignUpForm(UserCreationForm):
             "account_id",
             "email",
             "name",
+            "role"
         )
         labels = {
             "account_id" : "アカウントID",
             "email" : "メールアドレス",
             "name" : "名前",
+            "role" : "ロール"
         }
 
 class LoginFrom(AuthenticationForm):
