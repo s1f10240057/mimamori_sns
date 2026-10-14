@@ -32,7 +32,7 @@ def timeline(request):
     context["user_pair"] = pairs
     photos = Photo.objects.order_by("created_at")
     if request.GET.get('filter') == "pair":
-         photos = photos.filter(who_id__in=[u.id for u in pairs])
+         photos = photos.filter(posted_user__in=[u for u in pairs])
     context["photos"] = photos
     return render(request, "mimamori/timeline.html", context)
 
@@ -40,10 +40,9 @@ def postPhotoAPI(request):
     response_data = {"success" : False}
     if request.method == "POST":
         photo_data = request.FILES.get('photo')
-        who_id = request.user.id
         photo = Photo(
             image = photo_data,
-            who_id = who_id,
+            posted_user = request.user,
         )
         photo.save()
         response_data = {
