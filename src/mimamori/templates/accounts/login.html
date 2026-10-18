@@ -16,22 +16,28 @@
 </head>
 <body>
 <!--    <div class="h1">Login</div>-->
-<h1>ログイン</h1>
-<form method="post">
-    {% csrf_token %}
-    {{ form.non_field_errors }}
-    {% for field in form %}
-    {{ field.label }}
-    <br>
-    {{ field }}
-    <br>
-    {{ field.errors }}
-    <br>
-    {% endfor %}
-    <div class="mt-3">
-        <button type="submit" class="btn btn-primary">ログイン</button>
-        <a href="{% url 'mimamori:index' %}" class="btn btn-secondary">戻る</a>
+<div class="flexBoard">
+    <div class="baseWindow">
+        <h1 >ログイン</h1>
+        <form method="post">
+            {% csrf_token %}
+            {{ form.non_field_errors }}
+            {% for field in form %}
+            {{ field.label }}
+            <br>
+            {{ field }}
+            <br>
+            {{ field.errors }}
+            <br>
+            {% endfor %}
+            <div >
+                <button type="submit" class="btn">
+                    ログイン
+                </button>
+                <a href="{% url 'mimamori:index' %}" class="btn">戻る</a>
+            </div>
+        </form>
     </div>
-</form>
+</div>
 </body>
 </html>

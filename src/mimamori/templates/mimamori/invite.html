@@ -1,16 +1,25 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <link rel="stylesheet" href="{% static 'mimamori/css/common.css' %}">
 </head>
 <body>
-    {{inviter.name}}さんから招待が来ています！！
-    <div >
-        {% csrf_token %}
-        <button id="becamePairBtn">ペアになる</button>
+    <div class="flexBoard">
+        <div class="baseWindow">
+            <h1>
+                {{inviter.name}}さんから招待が来ています！！
+            </h1>
+            <div style="display:flex; flex-direction: column; justify-content: center; align-items: center;">
+                    {% csrf_token %}
+                    <button  class="btn" id="becamePairBtn" style="text-align: center; width: 300px; height: 100px;">ペアになる</button>
+            </div>
+        </div>
     </div>
+    
     <script>
         const becamePairBtn = document.getElementById("becamePairBtn");
         becamePairBtn.addEventListener("click", async ()=>{

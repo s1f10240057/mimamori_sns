@@ -5,47 +5,76 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
-    <!-- <link rel="stylesheet" href="{% static 'mimamori/css/common.css' %}"> -->
+    <link rel="stylesheet" href="{% static 'mimamori/css/common.css' %}">
 </head>
-<body style="background-color: rgb(250, 250, 255);">
-    <p>ホーム画面</p>
+<body>
+    
+    <div class="flexBoard">
+        <div class="baseWindow">
     {% if user.is_authenticated %}
         {% csrf_token %}
-        <p>こんにちは{{user.name}}さん！！！</p>
-
-        <button id="pairBtn">ペア登録</button>
-        <button id="friendBtn">友達登録</button>
-
-        <div id="extraSpace" style = "display:none;">
-            <div id = "window" >
-                {% csrf_token %}
-                <button id = "getPairTokenBtn">ペアトークンを発行</button>
-                <p id = "displayToken"></p>
-            </div>
-        </div>
-    
-
+        {% if user.is_authenticated %}
         <form method="post" action="{% url 'accounts:logout' %}">
-            {% csrf_token %}
-            <button type="submit">Logout</button>
-        </form>
-    {% else %}
-    <div style="height: 100vh; display: flex; flex-direction:column; align-items: center; justify-content: center; 
-                border-radius: 10px;">
-        <div style="font-size: 200%;">ようこそ</div>
-        <div>ログイン。もしくはサインアップしてください。</div>
-        <div style="display: flex; flex-direction:row; align-items: center;">
-            <a href="{% url 'accounts:login' %}" style="margin: 10px">Login</a>
-            <a href="{% url 'accounts:signup' %}" style="margin: 10px">Signup</a>
+                {% csrf_token %}
+                <button type="submit" class="btn" style="margin-top: 0;">Logout</button>
+            </form>
+        {% endif %}
+        <h1 style="margin-top: 0;">こんにちは {{user.name}} さん！！！</h1>
+        
+        
+        <div style="display:flex; flex-direction: column; justify-content:center; text-align: center;">
+            
+
+        <a href="{% url 'mimamori:timeline' %}" id="friendBtn" class="btn" style="height: 150px; display: flex; align-items: center; justify-content: center;">
+            画像を見る
+        </a>
+
+        
+            <button id="pairBtn" class="btn">ペア登録</button>
+                    <div id="extraSpace" style = "display:none;">
+            <div id = "window">
+                {% csrf_token %}
+                <div>
+                    <button id = "getPairTokenBtn" class="btn" >招待URLを発行</button>
+                    <button id="copyBtn" class="btn" style="display: none;">コピー</button>
+                        <p style="min-width: 0; height: auto; overflow: scroll;" id = "displayToken"></p>
+                        
+                    </div>
+                </div>
+            </div>
+            <button id="friendBtn" class="btn">友達登録</button>
         </div>
         
+
+
+    
+
+        
+    {% else %}
+    <div style="height: 100vh; display: flex; flex-direction: column;
+                justify-content: center; align-items: stretch; text-align: center;
+                padding: 0 16px; box-sizing: border-box;">
+    <div style="font-size: clamp(1.5rem, 8vw, 3rem);">見守りSNS(仮)にようこそ！！！</div>
+    <div style="font-size: clamp(1.2rem, 6vw, 2rem);">ログイン。もしくは会員登録してください。</div>
+    <div style="display: flex; flex-direction: row; align-items: center; justify-content: center;">
+        <a href="{% url 'accounts:login' %}" class="btn">ログイン</a>
+        <a href="{% url 'accounts:signup' %}" class="btn">会員登録</a>
+    </div>
     </div>
     {% endif %}
+        </div>
+    </div>
+    
     <script>
         const pairBtn = document.getElementById("pairBtn");
         const extraSpace = document.getElementById("extraSpace");
         pairBtn.addEventListener("click", () =>{
             extraSpace.style.display = "";
+        })
+
+        const copyBtn = document.getElementById("copyBtn");
+        copyBtn.addEventListener("click", () =>{
+            navigator.clipboard.writeText(document.getElementById("displayToken").textContent);
         })
         const getPairTokenBtn = document.getElementById("getPairTokenBtn");
         getPairTokenBtn.addEventListener("click", async ()=>{
@@ -66,6 +95,7 @@
                 const data = await response.json();
                 if (data.success === true) {
                     document.getElementById("displayToken").textContent = data.link;
+                    copyBtn.style.display = "";
                 } else {
                     alert("登録に失敗しました。もう一度やり直してください");
                 }
@@ -75,5 +105,6 @@
             }
         });
     </script>
+
 </body>
 </html>

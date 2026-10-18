@@ -72,7 +72,6 @@ class User(AbstractBaseUser, PermissionsMixin):
         ("B", "B"),
     )
 
-    # 既存の role フィールドに choices を追加
     role = models.CharField(
         verbose_name=_("role"),
         max_length=20,
