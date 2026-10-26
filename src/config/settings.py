@@ -14,17 +14,27 @@ LOGOUT_REDIRECT_URL = "mimamori:index"
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-a!h9ap)$ps38h+(g!3=ui7xx8z1vp#own+r_1jmr-yw$nr8p%0'
+SECRET_KEY = os.environ.get(
+    'SECRET_KEY',
+    'django-insecure-a!h9ap)$ps38h+(g!3=ui7xx8z1vp#own+r_1jmr-yw$nr8p%0'
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'True').lower() in ('true', '1', 't')
+
 ALLOWED_HOSTS = ['backend', 'localhost', '127.0.0.1']
+
+RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost",
     "http://localhost:8080",     # 実際にブラウザでアクセスしているURLに合わせる
     "http://127.0.0.1:8080",
 ]
+if RENDER_EXTERNAL_HOSTNAME:
+    CSRF_TRUSTED_ORIGINS.append(f"https://{RENDER_EXTERNAL_HOSTNAME}")
 
 # Application definition
 
@@ -77,16 +87,20 @@ WSGI_APPLICATION = 'config.wsgi.application'
 if os.environ.get('DATABASE_URL'):
     DATABASES = {
         "default": dj_database_url.config(
-            # Renderから渡されるURL。
             env="DATABASE_URL",  
             conn_max_age=600,
+            conn_health_checks=True,
         )
     }
 else:
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ.get('POSTGRES_DB', 'testdb'),
+            'USER': os.environ.get('POSTGRES_USER', 'iniad'),
+            'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'password'),
+            'HOST': os.environ.get('POSTGRES_HOST', 'db'),
+            'PORT': int(os.environ.get('POSTGRES_PORT', 5432)),
         }
     }
 
@@ -133,17 +147,6 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'collected_static/')
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-DATABASES = {
-    'default': {
-    'ENGINE': 'django.db.backends.postgresql',
-    'NAME': 'testdb',
-    'USER': 'iniad',
-    'PASSWORD': 'password',
-    'HOST': 'db',
-    'PORT': 5432,
-    }
-}
 
 MEDIA_URL = '/photos/'
 MEDIA_ROOT = BASE_DIR.parent / 'photos'
