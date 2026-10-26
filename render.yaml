@@ -1,11 +1,13 @@
 services:
   - type: web
     name: mimamori-django-app
-    runtime: docker
+    runtime: python
+    region: oregon # お好みのリージョン
     plan: free
-    dockerfilePath: ./django/Dockerfile
-    dockerContext: .
-    startCommand: uvicorn config.asgi:application --host 0.0.0.0 --port $PORT
+    # ビルド時にライブラリのインストール、静的ファイルの収集、マイグレーションを実行
+    buildCommand: "pip install -r django/requirements.txt && python src/manage.py collectstatic --noinput && python src/manage.py migrate"
+    # アプリの起動コマンド（--app-dirでsrcディレクトリを指定）
+    startCommand: "uvicorn config.asgi:application --app-dir src --host 0.0.0.0 --port $PORT"
     envVars:
       - key: DATABASE_URL
         fromDatabase:
