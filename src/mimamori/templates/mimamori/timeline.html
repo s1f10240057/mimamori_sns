@@ -86,9 +86,42 @@
 
     <!-- 2. タイムライン（過去の安否確認・投稿ログ） -->
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h3 class="h5 fw-bold mb-0 text-dark">みんなの投稿</h3>
+        <h3 class="h5 fw-bold mb-0 text-dark">タイムライン</h3>
         <span class="text-muted small">最新順</span>
     </div>
+
+    <!-- ペア絞り込み / ペア未設定アラート（入力側機能の統合） -->
+    {% if user_pair %}
+        <div class="card border-0 bg-white shadow-sm rounded-3 p-2 mb-3">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                <span class="small text-secondary ps-1">
+                    <i class="bi bi-people-fill text-primary me-1"></i>
+                    ペア: 
+                    {% for p in user_pair %}
+                        <span class="fw-bold text-dark">{{ p.name|default:p.account_id }}</span>{% if not forloop.last %}, {% endif %}
+                    {% endfor %}
+                </span>
+                <div class="btn-group btn-group-sm" role="group">
+                    <a href="{% querystring filter='' %}" 
+                       class="btn btn-outline-secondary rounded-pill me-1 px-3 {% if not request.GET.filter %}active fw-bold{% endif %}">
+                        すべて
+                    </a>
+                    <a href="{% querystring filter='pair' %}" 
+                       class="btn btn-outline-primary rounded-pill px-3 {% if request.GET.filter == 'pair' %}active fw-bold{% endif %}">
+                        自分のペアの画像だけ表示する
+                    </a>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="alert alert-warning border-0 shadow-sm rounded-3 d-flex align-items-center mb-3 py-2 px-3">
+            <i class="bi bi-exclamation-triangle-fill fs-5 me-2 text-warning"></i>
+            <div>
+                <strong>ペアがいません！！！</strong>
+                <span class="small d-block text-muted">ペアを登録すると、相手の投稿だけを絞り込んで確認できます。</span>
+            </div>
+        </div>
+    {% endif %}
 
     <div class="timeline-feed">
         {% if photos %}
@@ -102,7 +135,7 @@
                             <i class="bi bi-person-fill"></i>
                         </div>
                         <div>
-                            <h6 class="mb-0 fw-bold">おばあちゃん（花子）</h6>
+                            <h6 class="mb-0 fw-bold">{{ item.posted_user.name|default:item.posted_user.account_id }}</h6>
                             <small class="text-muted">
                                 {% if item.created_at %}
                                     {{ item.created_at|date:"Y/m/d H:i" }}

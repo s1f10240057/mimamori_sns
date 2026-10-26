@@ -67,7 +67,17 @@ class User(AbstractBaseUser, PermissionsMixin):
         auto_now=True
     )
 
+    ROLE_CHOICES = (
+        ("A", "A"),
+        ("B", "B"),
+    )
 
+    role = models.CharField(
+        verbose_name=_("role"),
+        max_length=20,
+        choices=ROLE_CHOICES,
+        default="A",
+    )
 
     objects = UserManager()
 
