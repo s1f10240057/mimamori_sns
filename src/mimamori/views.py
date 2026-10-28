@@ -55,13 +55,18 @@ def timeline(request):
     pair_ids = [u.id for u in pairs]
 
     # ペアが送信した投稿だけ
-    photos = (
-        Photo.objects
-        .filter(posted_user_id__in=pair_ids)
-        .select_related("posted_user")
-        .order_by("-created_at")
-    )
-
+    if request.user.role == "A":
+        photos = (
+            Photo.objects
+            .filter(posted_user_id__in=pair_ids)
+            .select_related("posted_user")
+            .order_by("-created_at")
+        )
+    else:
+        photos = (
+            Photo.objects
+            .order_by("-created_at")
+        )
     # ペアごとの最終投稿時刻(1クエリで集計)
     last_map = dict(
         Photo.objects

@@ -14,7 +14,7 @@ def dispatch_notifications():
 
     targets = NotificationSetting.objects.filter(
         enabled=True,
-        task_ended=False,
+        task_ended=None,
         notify_at__lte=now,
         sent_at__isnull=True,
     )
@@ -22,7 +22,7 @@ def dispatch_notifications():
         
         updated = (
             NotificationSetting.objects
-            .filter(pk=s.pk, enabled=True, task_ended=False, sent_at__isnull=True)
+            .filter(pk=s.pk, enabled=True, task_ended=None, sent_at__isnull=True)
             .update(sent_at=now)
         )
         # tasks.py の dispatch_notifications のループ内
