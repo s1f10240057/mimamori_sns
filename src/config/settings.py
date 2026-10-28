@@ -62,6 +62,13 @@ EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
 DEFAULT_FROM_EMAIL = "noreply@example.com"
 
+if os.environ.get("SITE_URL"):
+    SITE_URL = os.environ["SITE_URL"].rstrip("/")
+elif RENDER_EXTERNAL_HOSTNAME:
+    SITE_URL = f"https://{RENDER_EXTERNAL_HOSTNAME}"
+else:
+    SITE_URL = "http://127.0.0.1:8000"
+
 # settings.py
 
 
