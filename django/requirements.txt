@@ -2,3 +2,6 @@ Django
 psycopg2-binary
 uvicorn
 Pillow
+celery>=5.3
+redis>=5.0
+celery

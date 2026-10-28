@@ -1,0 +1,113 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>タスク一覧 - 見守りSNS</title>
+    <link rel="stylesheet" href="{% static 'mimamori/css/common.css' %}">
+    <link rel="stylesheet" href="{% static 'mimamori/css/checkTask.css' %}">
+</head>
+<body>
+    <main class="page">
+        {% csrf_token %}
+        <h1 class="page-title">タスク一覧</h1>
+
+        <section id="todoSection" class="task-section" hidden>
+            <h2 class="section-title">これからやること</h2>
+            <ul id="todoList" class="task-list"></ul>
+        </section>
+
+        <section id="doneSection" class="task-section" hidden>
+            <h2 class="section-title section-title-done">済んだこと</h2>
+            <ul id="doneList" class="task-list"></ul>
+        </section>
+
+        <p id="emptyMsg" class="empty-msg" hidden>いまのところ、タスクはありません。</p>
+        <p id="errorMsg" class="error-msg" role="alert" hidden>読み込めませんでした。<br>画面を開き直してください。</p>
+
+        <div class="page-footer">
+            <a href="{% url 'mimamori:index' %}" class="btn btn-small">メニューに戻る</a>
+        </div>
+    </main>
+
+    <script type="module">
+        import { getData } from "{% static 'mimamori/js/common.js' %}";
+
+        const doTaskUrlTemplate = "{% url 'mimamori:doTask' taskId=0 %}";
+        const todoSection = document.getElementById("todoSection");
+        const doneSection = document.getElementById("doneSection");
+        const todoList = document.getElementById("todoList");
+        const doneList = document.getElementById("doneList");
+        const emptyMsg = document.getElementById("emptyMsg");
+        const errorMsg = document.getElementById("errorMsg");
+
+        // 例: 10月24日(土) 9:00
+        function formatDate(iso) {
+            const d = new Date(iso);
+            if (isNaN(d)) return "";
+            const week = ["日", "月", "火", "水", "木", "金", "土"][d.getDay()];
+            const hh = d.getHours();
+            const mm = String(d.getMinutes()).padStart(2, "0");
+            return `${d.getMonth() + 1}月${d.getDate()}日(${week}) ${hh}:${mm}`;
+        }
+
+        function createItem(i, done) {
+            const li = document.createElement("li");
+
+            // 済みのものはリンクにしない
+            const card = document.createElement(done ? "div" : "a");
+            card.className = done ? "task-card task-card-done" : "task-card";
+            if (!done) {
+                card.href = doTaskUrlTemplate.replace(/0$/, i.id);
+            }
+
+            const body = document.createElement("div");
+            body.className = "task-body";
+
+            const theme = document.createElement("span");
+            theme.className = "task-theme";
+            theme.textContent = i.task_theme || "今日のタスク";
+
+            const time = document.createElement("span");
+            time.className = "task-time";
+            time.textContent = formatDate(i.notify_at);
+
+            body.append(theme, time);
+
+            const badge = document.createElement("span");
+            badge.className = done ? "task-badge task-badge-done" : "task-badge";
+                        badge.textContent = done ? (i.skipped ? "お休み" : "済み") : "やる";
+
+            card.append(body, badge);
+            li.appendChild(card);
+            return li;
+        }
+
+        window.addEventListener("load", async () => {
+            try {
+                const data = await getData("{{ user.account_id }}", "{% url 'notifications:getNotification' %}");
+                const list = (data && data.notificationLst) || [];
+
+                if (list.length === 0) {
+                    emptyMsg.hidden = false;
+                    return;
+                }
+
+                // スキップも写真提出も「済み」として扱う(APIの done を見る)
+                const todo = list.filter(i => !i.done);
+                const done = list.filter(i => i.done);
+
+                todo.forEach(i => todoList.appendChild(createItem(i, false)));
+                done.forEach(i => doneList.appendChild(createItem(i, true)));
+
+                todoSection.hidden = todo.length === 0;
+                doneSection.hidden = done.length === 0;
+            } catch (e) {
+                console.error(e);
+                errorMsg.hidden = false;
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,219 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>タスク設定 - 見守りSNS</title>
+  <link rel="stylesheet" href="{% static 'mimamori/css/timeline.css' %}">
+  <link rel="stylesheet" href="{% static 'mimamori/css/setting.css' %}">
+</head>
+<body class="role-a">
+
+  {% include "mimamori/partials/watcher_topbar.html" with active="settings" %}
+
+  <main class="ns-page">
+    <div class="ns-head">
+      <h1 class="ns-title">タスク設定</h1>
+      <p class="ns-lead">見守る相手を選んで、タスクを出す時間を決めます。</p>
+    </div>
+
+    {% if messages %}
+    <ul class="ns-messages">
+      {% for message in messages %}
+      <li class="ns-message {% if message.tags %}ns-{{ message.tags }}{% endif %}">{{ message }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+
+    <!-- 1. 対象を選ぶ -->
+    <section class="ns-targets" aria-label="対象を選ぶ">
+      {% for item in pairs %}
+      <label class="ns-target">
+        <input type="radio" name="target" value="{{ item.account_id }}" class="ns-target-input"{% if forloop.first %} checked{% endif %}>
+        <span class="ns-target-body">
+          <span class="ns-target-avatar">{{ item.name|default:item.account_id|slice:":1" }}</span>
+          <span class="ns-target-text">
+            <span class="ns-target-name">{{ item.name|default:item.account_id }}</span>
+            <span class="ns-target-id">{{ item.account_id }}</span>
+          </span>
+        </span>
+      </label>
+      {% empty %}
+      <div class="ns-no-pair">
+        <p class="ns-no-pair-text">まだ見守る相手がいません。</p>
+        <a href="{% url 'mimamori:pair' %}" class="ns-btn ns-btn-primary">ペアを追加する</a>
+      </div>
+      {% endfor %}
+    </section>
+
+    <div class="ns-columns">
+
+      <!-- 2. 左: タスクを作る -->
+      <section class="ns-card">
+        <header class="ns-card-head">
+          <h2 class="ns-card-title">タスクを作る</h2>
+          <p class="ns-card-sub">選んだ相手に、写真を送るタスクを出します。</p>
+        </header>
+
+        <form method="post" class="ns-form" id="taskForm">
+          {% csrf_token %}
+
+          {% if form.non_field_errors %}
+          <div class="ns-error-box">{{ form.non_field_errors }}</div>
+          {% endif %}
+
+          <div class="ns-fields">
+            {% for field in form %}
+            <div class="ns-field{% if field.errors %} has-error{% endif %}">
+              <label for="{{ field.id_for_label }}" class="ns-label">{{ field.label }}</label>
+              <div class="ns-input">{{ field }}</div>
+              {% if field.help_text %}<p class="ns-help">{{ field.help_text }}</p>{% endif %}
+              {% if field.errors %}<p class="ns-error">{{ field.errors|join:" / " }}</p>{% endif %}
+            </div>
+            {% endfor %}
+          </div>
+
+          <div class="ns-actions">
+            <button type="submit" class="ns-btn ns-btn-primary ns-btn-wide">この内容で保存</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- 3. 右: 予定一覧 -->
+      <section class="ns-card">
+        <header class="ns-card-head">
+          <h2 class="ns-card-title">出したタスク</h2>
+          <p class="ns-card-sub" id="listSub"></p>
+        </header>
+
+        <div id="lstBoard" class="ns-timeline"></div>
+        <p id="emptyMsg" class="ns-empty" hidden>この人へのタスクは、まだありません。</p>
+        <p id="errorMsg" class="ns-error-box" hidden>読み込めませんでした。</p>
+      </section>
+
+    </div>
+  </main>
+
+<script type="module">
+  import { getData } from "{% static 'mimamori/js/common.js' %}";
+
+  const url = "{% url 'notifications:getNotification' %}";
+  const radios = document.querySelectorAll('input[name="target"]');
+  const board = document.getElementById("lstBoard");
+  const emptyMsg = document.getElementById("emptyMsg");
+  const errorMsg = document.getElementById("errorMsg");
+  const listSub = document.getElementById("listSub");
+
+  const WEEK = ["日", "月", "火", "水", "木", "金", "土"];
+
+  function dayKey(d) {
+    return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+  }
+  function dayLabel(d) {
+    const today = new Date();
+    const diff = Math.round((new Date(d.getFullYear(), d.getMonth(), d.getDate())
+      - new Date(today.getFullYear(), today.getMonth(), today.getDate())) / 86400000);
+    const base = `${d.getMonth() + 1}月${d.getDate()}日(${WEEK[d.getDay()]})`;
+    if (diff === 0) return `今日 ${base}`;
+    if (diff === 1) return `明日 ${base}`;
+    if (diff === -1) return `昨日 ${base}`;
+    return base;
+  }
+  function timeLabel(d) {
+    return `${d.getHours()}:${String(d.getMinutes()).padStart(2, "0")}`;
+  }
+
+  // 写真提出もスキップも「完了」(APIの done を見る)
+  function stateOf(i, d) {
+    if (i.skipped) return ["skipped", "スキップ"];
+    if (i.done) return ["done", "完了"];
+    if (d < new Date()) return ["overdue", "未提出"];
+    return ["pending", "予定"];
+  }
+
+  function createItem(i, d) {
+    const [state, label] = stateOf(i, d);
+
+    const li = document.createElement("div");
+    li.className = `ns-item ns-item-${state}`;
+
+    const time = document.createElement("span");
+    time.className = "ns-item-time";
+    time.textContent = timeLabel(d);
+
+    const theme = document.createElement("span");
+    theme.className = "ns-item-theme";
+    theme.textContent = i.task_theme || "（テーマなし）";
+
+    const badge = document.createElement("span");
+    badge.className = `ns-badge ns-badge-${state}`;
+    badge.textContent = label;
+
+    li.append(time, theme, badge);
+    return li;
+  }
+
+  function render(list) {
+    board.replaceChildren();
+    const sorted = list
+      .map(i => ({ i, d: new Date(i.notify_at) }))
+      .filter(x => !isNaN(x.d))
+      .sort((a, b) => b.d - a.d);
+
+    let currentKey = null;
+    let group = null;
+    sorted.forEach(({ i, d }) => {
+      const key = dayKey(d);
+      if (key !== currentKey) {
+        currentKey = key;
+        const day = document.createElement("section");
+        day.className = "ns-day";
+        const h = document.createElement("h3");
+        h.className = "ns-day-title";
+        h.textContent = dayLabel(d);
+        group = document.createElement("div");
+        group.className = "ns-day-items";
+        day.append(h, group);
+        board.appendChild(day);
+      }
+      group.appendChild(createItem(i, d));
+    });
+
+        const doneCount = sorted.filter(x => x.i.done && !x.i.skipped).length;
+    const skipCount = sorted.filter(x => x.i.skipped).length;
+    listSub.textContent = `全${sorted.length}件 ・ 完了${doneCount}件 ・ スキップ${skipCount}件`;
+  }
+
+  async function load() {
+    const checked = document.querySelector('input[name="target"]:checked');
+    board.replaceChildren();
+    emptyMsg.hidden = true;
+    errorMsg.hidden = true;
+    listSub.textContent = "";
+
+    if (!checked) {
+      emptyMsg.hidden = false;
+      return;
+    }
+    try {
+      const data = await getData(checked.value, url);
+      if (!data || data.success !== true) throw new Error("failed");
+      const list = data.notificationLst || [];
+      if (list.length === 0) {
+        emptyMsg.hidden = false;
+        return;
+      }
+      render(list);
+    } catch (e) {
+      console.error(e);
+      errorMsg.hidden = false;
+    }
+  }
+
+  radios.forEach(r => r.addEventListener("change", load));
+  window.addEventListener("load", load);
+</script>
+
+</body>
+</html>
