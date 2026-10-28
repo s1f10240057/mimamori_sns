@@ -1,0 +1,152 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>タスク - 見守りSNS</title>
+    <link rel="stylesheet" href="{% static 'mimamori/css/common.css' %}">
+    <link rel="stylesheet" href="{% static 'mimamori/css/task.css' %}">
+</head>
+<body>
+    <main class="page">
+        <h1 class="page-title">タスク</h1>
+
+        <section class="card" id="formArea" hidden>
+            <form id="uploadForm" class="task-form">
+                {% csrf_token %}
+                <p class="card-text">今日の写真を1枚送ってください。</p>
+
+                <input type="file" id="photo" class="visually-hidden" accept="image/png, image/jpeg">
+                <label for="photo" class="btn btn-choose">写真を選ぶ</label>
+
+                <div id="previewArea" class="preview-area" hidden>
+                    <img id="preview" class="preview-img" alt="選んだ写真">
+                    <p class="preview-note">この写真でよろしいですか？</p>
+                </div>
+
+                <p id="errorMsg" class="error-msg" role="alert" hidden></p>
+
+                <button type="button" id="submitBtn" class="btn btn-send" disabled>この写真を送る</button>
+                <button type="button" id="skipBtn" class="btn btn-small btn-skip">今日はお休みする</button>
+            </form>
+        </section>
+
+        <section class="card done-card" id="doneArea" hidden>
+            <p class="done-mark">✓</p>
+            <p class="done-text">送れました。<br>ありがとうございます。</p>
+        </section>
+
+        <section class="card done-card" id="skippedArea" hidden>
+            <p class="done-mark done-mark-skip">–</p>
+            <p class="done-text">お休みを伝えました。<br>また次回お待ちしています。</p>
+        </section>
+
+        <section class="card" id="unavailableArea" hidden>
+            <p class="card-text">このタスクは、送信済みか、<br>開けないタスクです。</p>
+        </section>
+
+        <div class="page-footer">
+            <a href="{% url 'mimamori:index' %}" class="btn btn-small">メニューに戻る</a>
+        </div>
+    </main>
+
+    {{ task_available|json_script:"task-available" }}
+    {{ task_id|json_script:"task-id" }}
+
+    <script>
+        const taskAvailable = JSON.parse(document.getElementById("task-available").textContent);
+        const taskId = JSON.parse(document.getElementById("task-id").textContent);
+
+        const fileInput = document.getElementById("photo");
+        const submitBtn = document.getElementById("submitBtn");
+        const skipBtn = document.getElementById("skipBtn");
+        const previewArea = document.getElementById("previewArea");
+        const preview = document.getElementById("preview");
+        const errorMsg = document.getElementById("errorMsg");
+        const formArea = document.getElementById("formArea");
+        const doneArea = document.getElementById("doneArea");
+        const skippedArea = document.getElementById("skippedArea");
+        const unavailableArea = document.getElementById("unavailableArea");
+
+        // 表示の切り替えはここだけで行う
+        function showOnly(target) {
+            [formArea, doneArea, skippedArea, unavailableArea].forEach(el => {
+                el.hidden = (el !== target);
+            });
+        }
+
+        function showError(message) {
+            errorMsg.textContent = message;
+            errorMsg.hidden = false;
+        }
+
+        showOnly(taskAvailable ? formArea : unavailableArea);
+
+        fileInput.addEventListener("change", () => {
+            errorMsg.hidden = true;
+            const file = fileInput.files[0];
+            if (!file) {
+                previewArea.hidden = true;
+                submitBtn.disabled = true;
+                return;
+            }
+            preview.src = URL.createObjectURL(file);
+            previewArea.hidden = false;
+            submitBtn.disabled = false;
+        });
+
+        // 提出・スキップ共通の送信処理
+        async function send({ skip }) {
+            const token = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            const formData = new FormData();
+            formData.append("task_id", taskId);
+            if (skip) {
+                formData.append("skip", "true");
+            } else {
+                formData.append("photo", fileInput.files[0]);
+            }
+
+            submitBtn.disabled = true;
+            skipBtn.disabled = true;
+            errorMsg.hidden = true;
+
+            try {
+                const response = await fetch("{% url 'mimamori:photo' %}", {
+                    method: "POST",
+                    headers: { "X-CSRFToken": token },
+                    body: formData
+                });
+                if (response.status === 404) {
+                    showOnly(unavailableArea);
+                    return;
+                }
+                if (!response.ok) throw new Error("bad status");
+                const data = await response.json();
+                if (data.success !== true) throw new Error("failed");
+                showOnly(skip ? skippedArea : doneArea);
+            } catch (e) {
+                console.error(e);
+                showError("送れませんでした。もう一度お試しください。");
+                skipBtn.disabled = false;
+                submitBtn.disabled = fileInput.files.length === 0;
+                submitBtn.textContent = "この写真を送る";
+            }
+        }
+
+        submitBtn.addEventListener("click", () => {
+            if (fileInput.files.length === 0) {
+                showError("写真を選んでください。");
+                return;
+            }
+            submitBtn.textContent = "送っています…";
+            send({ skip: false });
+        });
+
+        skipBtn.addEventListener("click", () => {
+            if (!confirm("今日はお休みしますか？")) return;
+            send({ skip: true });
+        });
+    </script>
+</body>
+</html>

@@ -1,282 +1,82 @@
-{% extends 'mimamori/base.html' %}
-{% block title %}タイムライン - みまもりSNS{% endblock %}
+{% load static %}
+{% load relative_time %}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="{% static 'mimamori/css/timeline.css' %}">
+  <title>アルバム - 見守りSNS</title>
+</head>
 
-{% block header %}
-<!-- ヘッダー（案A: 標準・見守りSNS型） -->
-<header class="navbar navbar-light bg-white border-bottom sticky-top shadow-sm px-3 py-2">
-    <div class="container d-flex justify-content-between align-items-center" style="max-width: 680px;">
-        <!-- アプリロゴ・サービス名 -->
-        <a class="navbar-brand d-flex align-items-center fw-bold text-primary m-0" href="{% url 'mimamori:timeline' %}">
-            <i class="bi bi-shield-heart-fill text-danger me-2 fs-4"></i>
-            <span class="fs-5">みまもりSNS</span>
-        </a>
+<body{% if is_watcher %} class="role-a"{% endif %}>
+  <div class="container mx-auto text-center">
 
-        <!-- 右側アクション・ステータス -->
-        <div class="d-flex align-items-center gap-2">
-            <!-- 見守り中ステータスバッジ（Bootstrap Iconを使用） -->
-            <span class="badge bg-light text-success border border-success rounded-pill px-2 py-1 small d-inline-flex align-items-center">
-                <i class="bi bi-circle-fill text-success me-1" style="font-size: 0.5rem;"></i>
-                <span>見守り中</span>
-            </span>
+    {% if is_watcher %}{% include "mimamori/partials/watcher_topbar.html" with active="timeline" %}{% endif %}
 
-            <!-- 通知ベルアイコン（未読バッジ付き仮ボタン） -->
-            <button type="button" class="btn btn-light position-relative rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;" onclick="alert('お知らせ：本日の安否確認が届いています')">
-                <i class="bi bi-bell-fill text-secondary fs-6"></i>
-                <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle">
-                    <span class="visually-hidden">未読通知あり</span>
-                </span>
-            </button>
-        </div>
-    </div>
-</header>
-{% endblock %}
+    <div class="mm-page">
 
-{% block content %}
-<div class="container py-4" style="max-width: 680px; padding-bottom: 90px;">
+      <!-- ペアごとの最終投稿 -->
+      {% if is_watcher %}
+      <section class="mm-card mm-last">
+        <h2 class="mm-last-title">最後の投稿</h2>
+        {% if last_posts %}
+        <ul class="mm-last-list">
+          {% for p in last_posts %}
+          <li class="mm-last-item">
+            <span class="mm-last-name">{{ p.user.name|default:p.user.account_id }}</span>
+            {% if p.last %}
+            <span class="mm-last-time" title="{{ p.last|date:'Y/m/d H:i' }}">{{ p.last|ago }}</span>
+            {% else %}
+            <span class="mm-last-time mm-last-none">まだ投稿なし</span>
+            {% endif %}
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="mm-last-none">ペアがいません。</p>
+        {% endif %}
+      </section>
+      {% endif %}
 
-    <!-- 1. ヘッダー＆本日の安否ステータスカード -->
-    <div class="card shadow-sm border-0 rounded-4 mb-4 bg-light">
-        <div class="card-body p-4 text-center">
-            <h1 class="h4 font-weight-bold mb-3 text-dark">本日の見守りステータス</h1>
-            
-            <!-- 安否未確認（未投稿）時の表示エリア -->
-            <div id="todayStatusPending">
-                <span class="badge bg-warning text-dark fs-6 px-3 py-2 mb-3 rounded-pill">
-                    今日の安否確認：未完了
-                </span>
-                <h2 class="h5 fw-bold text-secondary mb-2">今日はまだ投稿していません</h2>
-                <p class="text-muted small mb-3">写真を投稿するか、「今日は投稿しない」ボタンで無事を知らせましょう！</p>
-                
-                <!-- 投稿アクションフォーム -->
-                <form id="uploadForm" class="p-3 bg-white rounded-3 border">
-                    {% csrf_token %}
-                    
-                    <!-- ① 写真選択エリア -->
-                    <div class="mb-3">
-                        <label for="photo" class="form-label fw-bold text-start d-block">日常の写真を撮影・選択</label>
-                        <input type="file" id="photo" class="form-control form-control-lg" accept="image/png, image/jpeg">
-                    </div>
+      <div class="mm-section-head">
+        <h3 class="mm-section-title">写真アルバム</h3>
+        <span class="mm-muted-small">最新順</span>
+      </div>
 
-                    <!-- ② 投稿＆スキップボタン -->
-                    <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
-                        <!-- 写真投稿ボタン -->
-                        <button type="button" id="submitBtn" class="btn btn-primary btn-lg px-4 rounded-pill">
-                            <i class="bi bi-camera-fill me-1"></i> 写真を投稿する
-                        </button>
-                        
-                        <!-- スルーボタン（バックエンド未実装時は仮配置） -->
-                        <button type="button" id="skipBtn" class="btn btn-outline-secondary btn-lg px-4 rounded-pill" onclick="alert('「今日は投稿しない」を家族に送信しました（仮）')">
-                            今日は投稿しない
-                        </button>
-                    </div>
-                </form>
-            </div>
-            
-            <!-- ※写真投稿またはスキップ完了時に切り替える領域（将来用） -->
-            <!-- 
-            <div id="todayStatusComplete" class="d-none">
-                <span class="badge bg-success fs-6 px-3 py-2 mb-2 rounded-pill">
-                    <i class="bi bi-check-circle-fill me-1"></i> 本日の安否確認：完了
-                </span>
-                <p class="text-muted mb-0">今日もが無事が確認できました！</p>
-            </div> 
-            -->
-        </div>
-    </div>
-
-    <!-- 2. タイムライン（過去の安否確認・投稿ログ） -->
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h3 class="h5 fw-bold mb-0 text-dark">タイムライン</h3>
-        <span class="text-muted small">最新順</span>
-    </div>
-
-    <!-- ペア絞り込み / ペア未設定アラート（入力側機能の統合） -->
-    {% if user_pair %}
-        <div class="card border-0 bg-white shadow-sm rounded-3 p-2 mb-3">
-            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
-                <span class="small text-secondary ps-1">
-                    <i class="bi bi-people-fill text-primary me-1"></i>
-                    ペア: 
-                    {% for p in user_pair %}
-                        <span class="fw-bold text-dark">{{ p.name|default:p.account_id }}</span>{% if not forloop.last %}, {% endif %}
-                    {% endfor %}
-                </span>
-                <div class="btn-group btn-group-sm" role="group">
-                    <a href="{% querystring filter='' %}" 
-                       class="btn btn-outline-secondary rounded-pill me-1 px-3 {% if not request.GET.filter %}active fw-bold{% endif %}">
-                        すべて
-                    </a>
-                    <a href="{% querystring filter='pair' %}" 
-                       class="btn btn-outline-primary rounded-pill px-3 {% if request.GET.filter == 'pair' %}active fw-bold{% endif %}">
-                        自分のペアの画像だけ表示する
-                    </a>
-                </div>
-            </div>
-        </div>
-    {% else %}
-        <div class="alert alert-warning border-0 shadow-sm rounded-3 d-flex align-items-center mb-3 py-2 px-3">
-            <i class="bi bi-exclamation-triangle-fill fs-5 me-2 text-warning"></i>
+      <div class="timeline-feed">
+        {% for item in photos %}
+        <div class="mm-card mm-card-clip">
+          <div class="mm-card-header">
+            <div class="mm-avatar"><i class="bi bi-person-fill"></i></div>
             <div>
-                <strong>ペアがいません！！！</strong>
-                <span class="small d-block text-muted">ペアを登録すると、相手の投稿だけを絞り込んで確認できます。</span>
+              <h6 class="mm-poster-name">{{ item.posted_user.name }}</h6>
+              <small class="mm-muted-small">{{ item.created_at|date:"Y/m/d H:i" }}</small>
             </div>
+          </div>
+          <div class="mm-photo-wrap">
+            <img src="{{ item.image.url }}" alt="投稿画像" class="mm-photo">
+          </div>
         </div>
+        {% empty %}
+        <p class="mm-last-none">ペアの投稿はまだありません。</p>
+        {% endfor %}
+      </div>
+    </div>
+
+    {% if not is_watcher %}
+    <!-- B(高齢者): 下部の大きなナビ -->
+    <nav class="mm-nav">
+      <div class="mm-nav-inner">
+        <a href="{% url 'mimamori:index' %}" class="mm-nav-link mm-nav-active">
+          <i class="bi bi-house-door-fill mm-nav-icon"></i>
+          <span class="mm-nav-label mm-bold" style="font-size: 2rem;">メニューに戻る</span>
+        </a>
+      </div>
+    </nav>
     {% endif %}
 
-    <div class="timeline-feed">
-        {% if photos %}
-            {% for item in photos %}
-                <!-- 投稿カード -->
-                <div class="card shadow-sm border-0 rounded-4 mb-4 overflow-hidden">
-                    <!-- 投稿者ヘッダー -->
-                    <div class="card-header bg-white border-0 d-flex align-items-center p-3">
-                        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-3" style="width: 45px; height: 45px; font-weight: bold; font-size: 1.2rem;">
-                            <!-- プロフィール画像がない場合の仮アバター -->
-                            <i class="bi bi-person-fill"></i>
-                        </div>
-                        <div>
-                            <h6 class="mb-0 fw-bold">{{ item.posted_user.name|default:item.posted_user.account_id }}</h6>
-                            <small class="text-muted">
-                                {% if item.created_at %}
-                                    {{ item.created_at|date:"Y/m/d H:i" }}
-                                {% else %}
-                                    本日 14:30
-                                {% endif %}
-                                 ・ <i class="bi bi-circle-fill text-success me-1" style="font-size: 0.65rem;"></i>写真投稿で安否確認
-                            </small>
-                        </div>
-                    </div>
+  </div>
+</body>
+</html>
 
-                    <!-- 投稿画像 -->
-                    <div class="text-center bg-dark">
-                        <img src="{{ item.image.url }}" alt="投稿画像" class="img-fluid w-100" style="max-height: 500px; object-fit: contain;">
-                    </div>
-
-                    <!-- 投稿キャプション（将来用） -->
-                    <div class="card-body p-3">
-                        <p class="card-text text-dark">テレビを見ながらお茶を飲んでいます <i class="bi bi-cup-hot-fill text-secondary ms-1"></i></p>
-                    </div>
-
-                    <!-- 家族からのリアクション・コメント欄（デザインのみ配置） -->
-                    <div class="card-footer bg-light border-0 p-3">
-                        <div class="d-flex align-items-center mb-2">
-                            <span class="fw-bold text-secondary small me-2">家族からのメッセージ:</span>
-                        </div>
-                        
-                        <!-- コメントリスト（サンプル表示） -->
-                        <div class="bg-white p-2 rounded-3 border mb-2 small text-start">
-                            <span class="fw-bold text-primary">拓郎（息子）:</span> 元気そうでよかった！明日電話するね。
-                        </div>
-
-                        <!-- 返信入力フォーム（デザインのみ） -->
-                        <div class="input-group input-group-sm mt-2">
-                            <input type="text" class="form-control" placeholder="返信メッセージを入力...">
-                            <button class="btn btn-outline-primary" type="button">送信</button>
-                        </div>
-                    </div>
-                </div>
-            {% endfor %}
-        {% else %}
-            <!-- まだ投稿がない場合のダミー表示（デザイン確認用） -->
-            
-            <!-- ケースA：写真投稿のダミー -->
-            <div class="card shadow-sm border-0 rounded-4 mb-4">
-                <div class="card-header bg-white border-0 d-flex align-items-center p-3">
-                    <div class="rounded-circle bg-info text-white d-flex align-items-center justify-content-center me-3" style="width: 45px; height: 45px; font-weight: bold; font-size: 1.2rem;">
-                        <i class="bi bi-person-fill"></i>
-                    </div>
-                    <div>
-                        <h6 class="mb-0 fw-bold">おじいちゃん（太郎）</h6>
-                        <small class="text-muted">昨日 15:20 ・ <i class="bi bi-circle-fill text-success me-1" style="font-size: 0.65rem;"></i>写真投稿</small>
-                    </div>
-                </div>
-                <div class="p-4 bg-light text-center text-muted">
-                    （ここにアップロードした画像が表示されます）
-                </div>
-                <div class="card-body">
-                    <p class="card-text">庭のお花が咲きました <i class="bi bi-flower1 text-danger ms-1"></i></p>
-                </div>
-            </div>
-
-            <!-- ケースB：★「今日は投稿しない」スキップログの表示デザイン -->
-            <div class="card shadow-sm border-0 rounded-4 mb-4 border-start border-4 border-secondary">
-                <div class="card-body p-3 d-flex align-items-center justify-content-between">
-                    <div class="d-flex align-items-center">
-                        <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px; font-size: 1.1rem;">
-                            <i class="bi bi-pause-circle-fill"></i>
-                        </div>
-                        <div>
-                            <h6 class="mb-0 fw-bold text-secondary">おじいちゃん（太郎）</h6>
-                            <small class="text-muted">2日前 11:05 ・ <i class="bi bi-circle-fill text-warning me-1" style="font-size: 0.65rem;"></i>「今日は投稿しない」で安否確認完了</small>
-                        </div>
-                    </div>
-                    <span class="badge bg-light text-dark border">無事確認</span>
-                </div>
-            </div>
-        {% endif %}
-    </div>
-
-</div>
-
-<script>
-    const button = document.getElementById("submitBtn");
-    button.addEventListener("click", async () => {
-        const fileInput = document.getElementById("photo");
-        const token = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
-        // ファイルが選択されているかチェック
-        if (fileInput.files.length === 0) {
-            alert("ファイルを選択してください");
-            return;
-        }
-
-        // FormDataを使って画像ファイルを含めたデータを構築
-        const formData = new FormData();
-        formData.append("photo", fileInput.files[0]); // 実際のファイルオブジェクトを追加
-
-        try {
-            const response = await fetch("{% url 'mimamori:photo' %}", {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': token
-                },
-                body: formData
-            });
-
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-
-            const data = await response.json();
-            if (data.success === true) {
-                alert("アップロード成功しました！");
-                location.reload();
-            } else {
-                alert("登録に失敗しました。もう一度やり直してください");
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            alert("通信エラーが発生しました");
-        }
-    });
-</script>
-{% endblock %}
-
-{% block footer %}
-<!-- 下部固定フッター（ボトムナビゲーション） -->
-<nav class="navbar fixed-bottom bg-white border-top shadow-sm py-1">
-    <div class="container d-flex justify-content-around align-items-center" style="max-width: 500px;">
-        <!-- タイムライン（現在地・アクティブ表示） -->
-        <a href="{% url 'mimamori:timeline' %}" class="btn btn-link text-primary text-decoration-none d-flex flex-column align-items-center py-1 px-3">
-            <i class="bi bi-house-door-fill fs-5 mb-1"></i>
-            <span class="fw-bold" style="font-size: 0.75rem;">タイムライン</span>
-        </a>
-
-        <!-- プロフィール（はりぼて） -->
-        <a href="#" class="btn btn-link text-secondary text-decoration-none d-flex flex-column align-items-center py-1 px-3" onclick="alert('プロフィール画面（準備中）'); return false;">
-            <i class="bi bi-person-circle fs-5 mb-1"></i>
-            <span style="font-size: 0.75rem;">プロフィール</span>
-        </a>
-    </div>
-</nav>
-{% endblock %}

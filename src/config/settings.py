@@ -1,6 +1,7 @@
 import os
 import dj_database_url
 from pathlib import Path
+from celery.schedules import crontab
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -46,8 +47,37 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'mimamori',
-    'accounts'
+    'accounts',
+    'notifications'
 ]
+
+CELERY_BROKER_URL = "redis://redis:6379/0"
+CELERY_TIMEZONE = "Asia/Tokyo"
+
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+EMAIL_HOST = "smtp.example.com"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
+DEFAULT_FROM_EMAIL = "noreply@example.com"
+
+# settings.py
+
+
+CELERY_TIMEZONE = "Asia/Tokyo"
+
+CELERY_BEAT_SCHEDULE = {
+    "dispatch-notifications": {
+        "task": "notifications.tasks.dispatch_notifications",
+        "schedule": crontab(),  # 毎分
+    },
+    "generate-monthly-notifications": {
+        "task": "notifications.tasks.generate_monthly_notifications",
+        "schedule": crontab(day_of_month="1", hour=0, minute=10),
+    },
+}
+
 
 AUTH_USER_MODEL = "accounts.User"
 

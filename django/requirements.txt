@@ -3,3 +3,5 @@ psycopg2-binary
 uvicorn
 Pillow
 dj-database-url
+celery>=5.3
+redis>=5.0

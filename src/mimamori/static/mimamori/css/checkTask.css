@@ -1,0 +1,107 @@
+.task-section[hidden],
+.empty-msg[hidden],
+.error-msg[hidden] { display: none; }
+
+.task-section { display: flex; flex-direction: column; gap: 12px; }
+
+.section-title {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--accent-color-dark);
+}
+.section-title-done { color: #5c6a6f; }
+
+.task-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* カード(未完了はリンク) */
+.task-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px;
+  background: var(--sub-color);
+  color: var(--text-color);
+  border: 2px solid var(--accent-color);
+  border-left: 10px solid var(--accent-color);
+  border-radius: 16px;
+  box-shadow: 0 3px 0 var(--accent-color);
+}
+a.task-card:active {
+  transform: translateY(3px);
+  box-shadow: none;
+  background: var(--main-color);
+}
+a.task-card:focus-visible {
+  outline: 4px solid var(--focus-color);
+  outline-offset: 3px;
+}
+
+.task-body { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.task-theme {
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.3;
+  word-break: break-all;
+}
+.task-time { font-size: 1.25rem; color: var(--accent-color-dark); }
+
+/* 状態バッジ */
+.task-badge {
+  flex-shrink: 0;
+  padding: 8px 18px;
+  font-size: 1.375rem;
+  font-weight: 700;
+  color: var(--text-color);
+  background: var(--main-color);
+  border: 2px solid var(--accent-color);
+  border-radius: 999px;
+}
+
+/* 済み: 目立たせない */
+.task-card-done {
+  background: var(--page-bg);
+  border-color: #b8c3c7;
+  border-left-color: #b8c3c7;
+  box-shadow: none;
+}
+.task-card-done .task-theme,
+.task-card-done .task-time { color: #5c6a6f; }
+.task-badge-done {
+  background: #d5dde0;
+  border-color: #b8c3c7;
+  color: #3d4a4f;
+}
+
+/* 空・エラー */
+.empty-msg {
+  margin: 0;
+  padding: 24px 16px;
+  font-size: 1.5rem;
+  text-align: center;
+  background: var(--sub-color);
+  border: 2px dashed var(--accent-color);
+  border-radius: 16px;
+}
+.error-msg {
+  margin: 0;
+  padding: 16px;
+  font-size: 1.375rem;
+  font-weight: 700;
+  text-align: center;
+  color: #8a1c1c;
+  background: #fde8e8;
+  border-radius: 12px;
+}
+
+/* この画面のボタンは控えめ */
+.page .btn-small { min-height: 48px; font-size: 1.25rem; padding: 8px 20px; width: auto; }
+.page-footer { display: flex; justify-content: center; margin-top: 4px; }

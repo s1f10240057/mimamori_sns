@@ -1,0 +1,108 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if is_watcher %}ペア管理{% else %}ペアを追加{% endif %} - 見守りSNS</title>
+    {% if is_watcher %}
+    <link rel="stylesheet" href="{% static 'mimamori/css/timeline.css' %}">
+    <link rel="stylesheet" href="{% static 'mimamori/css/pair_watcher.css' %}">
+    {% else %}
+    <link rel="stylesheet" href="{% static 'mimamori/css/common.css' %}">
+    <link rel="stylesheet" href="{% static 'mimamori/css/pair.css' %}">
+    {% endif %}
+</head>
+<body{% if is_watcher %} class="role-a"{% endif %}>
+
+{% if is_watcher %}{% include "mimamori/partials/watcher_topbar.html" with active="pair" %}{% endif %}
+
+<main class="{% if is_watcher %}pw-page{% else %}page{% endif %}">
+    {% csrf_token %}
+    <h1 class="{% if is_watcher %}pw-title{% else %}page-title{% endif %}">{% if is_watcher %}ペア管理{% else %}ペアを追加{% endif %}</h1>
+
+    <div class="{% if is_watcher %}pw-columns{% else %}menu{% endif %}">
+
+        <!-- 招待(A・B共通) -->
+        <section class="{% if is_watcher %}pw-card{% else %}card{% endif %}">
+            <p class="{% if is_watcher %}pw-card-sub{% else %}card-text{% endif %}">
+                招待URLを発行して、追加したい相手に送ってください。{% if is_watcher %}有効期限は24時間です。{% endif %}
+            </p>
+            <button type="button" id="getPairTokenBtn" class="{% if is_watcher %}pw-btn pw-btn-primary{% else %}btn btn-large{% endif %}">招待URLを発行</button>
+
+            <div id="tokenArea" class="{% if is_watcher %}pw-token{% else %}token-area{% endif %}" hidden>
+                <input type="text" id="displayToken" class="{% if is_watcher %}pw-token-input{% else %}token-text{% endif %}" readonly>
+                <button type="button" id="copyBtn" class="{% if is_watcher %}pw-btn pw-btn-sub{% else %}btn{% endif %}">コピー</button>
+            </div>
+            <p id="msg" class="{% if is_watcher %}pw-note{% else %}token-msg{% endif %}" role="status" hidden></p>
+        </section>
+
+        <!-- 登録済み(A・B共通) -->
+        <section class="{% if is_watcher %}pw-card{% else %}card{% endif %}">
+            <h2 class="{% if is_watcher %}pw-card-title{% else %}section-title{% endif %}">{% if is_watcher %}登録済みのペア（{{ pairs|length }}人）{% else %}登録済みのペア{% endif %}</h2>
+
+            {% if pairs %}
+            <ul class="{% if is_watcher %}pw-list{% else %}pair-list{% endif %}">
+                {% for p in pairs %}
+                <li class="{% if is_watcher %}pw-item{% else %}pair-item{% endif %}">
+                    <span class="{% if is_watcher %}pw-item-name{% else %}pair-name{% endif %}">{{ p.user.name|default:p.user.account_id }}</span>
+                    <span class="{% if is_watcher %}pw-item-date{% else %}pair-date{% endif %}">{{ p.created_at|date:"Y/m/d" }} 追加</span>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="{% if is_watcher %}pw-empty{% else %}pair-empty{% endif %}">まだペアがいません。招待URLを送って追加しましょう。</p>
+            {% endif %}
+        </section>
+    </div>
+
+    {% if not is_watcher %}
+    <div class="page-footer">
+        <a href="{% url 'mimamori:index' %}" class="btn btn-small">メニューに戻る</a>
+    </div>
+    {% endif %}
+</main>
+
+<script>
+    const btn = document.getElementById("getPairTokenBtn");
+    const copyBtn = document.getElementById("copyBtn");
+    const area = document.getElementById("tokenArea");
+    const input = document.getElementById("displayToken");
+    const msg = document.getElementById("msg");
+
+    const say = (text) => { msg.textContent = text; msg.hidden = false; };
+
+    btn.addEventListener("click", async () => {
+        const token = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        btn.disabled = true;
+        msg.hidden = true;
+        try {
+            const res = await fetch("{% url 'mimamori:getPairToken' %}", {
+                method: "POST",
+                headers: { "X-CSRFToken": token },
+            });
+            if (!res.ok) throw new Error("bad status");
+            const data = await res.json();
+            if (data.success !== true) throw new Error("failed");
+            input.value = data.link;
+            area.hidden = false;
+        } catch (e) {
+            console.error(e);
+            say("発行できませんでした。もう一度お試しください。");
+        } finally {
+            btn.disabled = false;
+        }
+    });
+
+    copyBtn.addEventListener("click", async () => {
+        try {
+            await navigator.clipboard.writeText(input.value);
+            say("コピーしました。");
+        } catch (e) {
+            input.select();
+            say("自動でコピーできませんでした。選択済みなので、長押し/Ctrl+C でコピーしてください。");
+        }
+    });
+</script>
+</body>
+</html>
