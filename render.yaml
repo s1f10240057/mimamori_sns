@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: mimamori-django-app
+    runtime: python
+    region: oregon # お好みのリージョン
+    plan: free
+    # ビルド時にライブラリのインストール、静的ファイルの収集、マイグレーションを実行
+    buildCommand: "pip install -r django/requirements.txt && python src/manage.py collectstatic --noinput"
+    startCommand: "python src/manage.py migrate && uvicorn config.asgi:application --app-dir src --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: mimamori-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "False"
+
+databases:
+  - name: mimamori-db
+    plan: free
+    databaseName: mimamori_db
+    user: mimamori_user
