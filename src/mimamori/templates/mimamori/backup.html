@@ -1,0 +1,218 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'mimamori/css/timeline.css' %}">
+  <title>Account</title>
+</head>
+
+<body>
+  <div class="container mx-auto text-center">
+    <div class="mm-page">
+        <!-- 1. ヘッダー＆本日の安否ステータスカード -->
+        <div class="mm-card mm-card-light">
+            <div class="mm-card-body">
+                <div id="todayStatusPending">
+                    <form id="uploadForm" class="mm-form">
+                        {% csrf_token %}
+                        <div class="mm-field">
+                            <label for="photo" class="mm-label">写真を撮影・選択</label>
+                            <input type="file" id="photo" class="mm-input" accept="image/png, image/jpeg">
+                        </div>
+
+                        <div class="mm-actions">
+                            <button type="button" id="submitBtn" class="mm-btn mm-btn-primary">
+                                <i class="bi bi-camera-fill mm-icon-gap"></i> 送信
+                            </button>
+
+                            <button type="button" id="skipBtn" class="mm-btn mm-btn-outline" onclick="alert('「今日は投稿しない」を家族に送信しました（仮）')">
+                                やめとく
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="mm-section-head">
+            <h3 class="mm-section-title">投稿欄</h3>
+            <span class="mm-muted-small">最新順</span>
+        </div>
+
+        <div class="timeline-feed">
+            {% if photos %}
+                {% for item in photos %}
+                    <div class="mm-card mm-card-clip">
+                        <div class="mm-card-header">
+                            <div class="mm-avatar">
+                                <i class="bi bi-person-fill"></i>
+                            </div>
+                            <div>
+                                <h6 class="mm-poster-name">{{ item.posted_user.name }}</h6>
+                                <small class="mm-muted-small">
+                                    {% if item.created_at %}
+                                        {{ item.created_at|date:"Y/m/d H:i" }}
+                                    {% endif %}
+
+                                </small>
+                            </div>
+                        </div>
+
+                        <div class="mm-photo-wrap">
+                            <img src="{{ item.image.url }}" alt="投稿画像" class="mm-photo">
+                        </div>
+                </div> 
+                {% endfor %}
+            {% endif %}
+        </div>
+
+    </div>
+
+    <script>
+        const button = document.getElementById("submitBtn");
+        button.addEventListener("click", async () => {
+            const fileInput = document.getElementById("photo");
+            const token = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+            // ファイルが選択されているかチェック
+            if (fileInput.files.length === 0) {
+                alert("ファイルを選択してください");
+                return;
+            }
+
+            // FormDataを使って画像ファイルを含めたデータを構築
+            const formData = new FormData();
+            formData.append("photo", fileInput.files[0]); // 実際のファイルオブジェクトを追加
+
+            try {
+                const response = await fetch("{% url 'mimamori:photo' %}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': token
+                    },
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+                const data = await response.json();
+                if (data.success === true) {
+                    alert("アップロード成功しました！");
+                    location.reload();
+                } else {
+                    alert("登録に失敗しました。もう一度やり直してください");
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert("通信エラーが発生しました");
+            }
+        });
+    </script>
+
+    <!-- 下部固定フッター（ボトムナビゲーション） -->
+    <nav class="mm-nav">
+        <div class="mm-nav-inner">
+            <!-- タイムライン（現在地・アクティブ表示） -->
+            <a href="{% url 'mimamori:timeline' %}" class="mm-nav-link mm-nav-active">
+                <i class="bi bi-house-door-fill mm-nav-icon"></i>
+                <span class="mm-nav-label mm-bold">タイムライン</span>
+            </a>
+
+            <!-- プロフィール（はりぼて） -->
+            <a href="#" class="mm-nav-link mm-nav-inactive" onclick="alert('プロフィール画面（準備中）'); return false;">
+                <i class="bi bi-person-circle mm-nav-icon"></i>
+                <span class="mm-nav-label">プロフィール</span>
+            </a>
+        </div>
+    </nav>
+
+  </div>
+</body>
+
+</html>
+
+
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <h1>タイムライン</h1>
+    {% if user_pair %}
+    <div>
+        <a href="{% querystring filter='pair' %}">
+            自分のペアの画像だけ表示する
+        </a>
+    </div>
+    {% else%}
+    <p>ペアがいません！！！</p>
+    {% endif %}
+
+    <div>
+        <form id="uploadForm">
+            {% csrf_token %}
+            <input type="file" id="photo" accept="image/png, image/jpeg">
+            <button type="button" id="submitBtn">投稿</button>
+        </form>
+    </div>
+
+    {% if photos %}
+        
+        {% for item in photos %}
+        <p> 投稿者: {{ item.posted_user.name }}</p>
+        <img src="{{ item.image.url }}" alt="投稿画像" style="max-width: 300px;">
+        {% endfor %}
+    {% endif %}
+
+    <script>
+        const button = document.getElementById("submitBtn");
+        button.addEventListener("click", async () => {
+            const fileInput = document.getElementById("photo");
+            const token = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+            if (fileInput.files.length === 0) {
+                alert("ファイルを選択してください");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("photo", fileInput.files[0]);
+            formData.append("task_id", null);
+
+            try {
+                const response = await fetch("{% url 'mimamori:photo' %}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': token
+                    },
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+                const data = await response.json();
+                if (data.success === true) {
+                    alert("アップロード成功しました！");
+                    location.reload();
+                } else {
+                    alert("登録に失敗しました。もう一度やり直してください");
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert("通信エラーが発生しました");
+            }
+        });
+    </script>
+</body>
+</html> -->

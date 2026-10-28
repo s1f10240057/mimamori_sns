@@ -1,0 +1,11 @@
+<header class="mm-topbar">
+  <div class="mm-topbar-inner">
+    <a href="{% url 'mimamori:timeline' %}" class="mm-topbar-link{% if active == 'timeline' %} mm-topbar-active{% endif %}">アルバム</a>
+    <a href="{% url 'notifications:notification_settings' %}" class="mm-topbar-link{% if active == 'settings' %} mm-topbar-active{% endif %}">タスク設定</a>
+    <a href="{% url 'mimamori:pair' %}" class="mm-topbar-link{% if active == 'pair' %} mm-topbar-active{% endif %}">ペア管理</a>
+    <form method="post" action="{% url 'accounts:logout' %}" class="mm-topbar-logout">
+      {% csrf_token %}
+      <button type="submit" class="mm-topbar-link mm-topbar-btn">ログアウト</button>
+    </form>
+  </div>
+</header>

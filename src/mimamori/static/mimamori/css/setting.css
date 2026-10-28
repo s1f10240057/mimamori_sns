@@ -1,0 +1,167 @@
+.ns-page { max-width: 1040px; margin: 0 auto; padding: 1.5rem 1rem 3rem; text-align: left; }
+.ns-page [hidden] { display: none; }
+.ns-topbar-inner { max-width: 1040px; }
+
+/* 見出し */
+.ns-head { margin-bottom: 1.25rem; }
+.ns-title { margin: 0; font-size: 1.5rem; font-weight: 700; color: var(--mm-color-text); }
+.ns-lead { margin: 0.25rem 0 0; color: var(--mm-color-secondary); }
+
+/* メッセージ */
+.ns-messages { list-style: none; margin: 0 0 1rem; padding: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+.ns-message {
+  padding: 0.7rem 1rem;
+  color: var(--mm-color-text);
+  background: var(--mm-color-surface-light);
+  border-left: 4px solid var(--mm-color-primary);
+  border-radius: 0.5rem;
+}
+.ns-message.ns-error { border-left-color: #b42318; background: #fef3f2; }
+.ns-message.ns-success { border-left-color: #1a7f4b; background: #ecfdf3; }
+
+/* 1. 対象選択 */
+.ns-targets { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1.25rem; }
+.ns-target { cursor: pointer; }
+.ns-target-input { position: absolute; opacity: 0; pointer-events: none; }
+.ns-target-body {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 14rem;
+  padding: 0.75rem 1rem;
+  background: var(--mm-color-surface);
+  border: 2px solid var(--mm-color-border);
+  border-radius: 0.9rem;
+  transition: border-color .15s, box-shadow .15s;
+}
+.ns-target:hover .ns-target-body { border-color: var(--mm-color-primary); }
+.ns-target-input:checked + .ns-target-body {
+  border-color: var(--mm-color-primary);
+  box-shadow: 0 0 0 3px rgba(13, 110, 253, .18);
+}
+.ns-target-input:focus-visible + .ns-target-body { outline: 2px solid var(--mm-color-primary); outline-offset: 2px; }
+.ns-target-avatar {
+  display: flex; align-items: center; justify-content: center;
+  width: 2.5rem; height: 2.5rem;
+  font-weight: 700; color: var(--mm-color-on-primary);
+  background: var(--mm-color-primary);
+  border-radius: 50%;
+}
+.ns-target-text { display: flex; flex-direction: column; line-height: 1.3; }
+.ns-target-name { font-weight: 700; color: var(--mm-color-text); }
+.ns-target-id { font-size: 0.8125rem; color: var(--mm-color-secondary); }
+
+.ns-no-pair {
+  width: 100%;
+  padding: 1.25rem;
+  text-align: center;
+  background: var(--mm-color-surface);
+  border: 2px dashed var(--mm-color-border-input);
+  border-radius: 0.9rem;
+}
+.ns-no-pair-text { margin: 0 0 0.75rem; color: var(--mm-color-secondary); }
+
+/* 2カラム */
+.ns-columns { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 1.25rem; align-items: start; }
+@media (max-width: 820px) { .ns-columns { grid-template-columns: 1fr; } }
+
+/* カード */
+.ns-card {
+  padding: 1.25rem;
+  background: var(--mm-color-surface);
+  border: 1px solid var(--mm-color-border);
+  border-radius: 1rem;
+  box-shadow: 0 0.125rem 0.25rem var(--mm-color-shadow);
+}
+.ns-card-head { margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--mm-color-border); }
+.ns-card-title { margin: 0; font-size: 1.125rem; font-weight: 700; color: var(--mm-color-text); }
+.ns-card-sub { margin: 0.2rem 0 0; font-size: 0.875rem; color: var(--mm-color-secondary); min-height: 1.3em; }
+
+/* フォーム */
+.ns-form { display: flex; flex-direction: column; gap: 1.25rem; }
+.ns-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.ns-field { display: flex; flex-direction: column; gap: 0.35rem; min-width: 0; }
+/* 長い入力(テキスト・複数選択)は横いっぱい */
+.ns-field:has(textarea),
+.ns-field:has(input[type="text"]),
+.ns-field:has(ul) { grid-column: 1 / -1; }
+@media (max-width: 480px) { .ns-fields { grid-template-columns: 1fr; } }
+
+.ns-label { font-size: 0.875rem; font-weight: 700; color: var(--mm-color-text); }
+.ns-help { margin: 0; font-size: 0.8125rem; color: var(--mm-color-secondary); }
+.ns-error { margin: 0; font-size: 0.8125rem; font-weight: 700; color: #b42318; }
+.ns-error-box { margin: 0; padding: 0.75rem; font-weight: 700; color: #b42318; background: #fef3f2; border-radius: 0.5rem; }
+.ns-field.has-error input,
+.ns-field.has-error select { border-color: #b42318; }
+
+.ns-input input:not([type="checkbox"]):not([type="radio"]),
+.ns-input select,
+.ns-input textarea {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  font-family: inherit;
+  font-size: 1rem;
+  color: var(--mm-color-text);
+  background: var(--mm-color-surface);
+  border: 1px solid var(--mm-color-border-input);
+  border-radius: 0.5rem;
+}
+.ns-input input:focus,
+.ns-input select:focus,
+.ns-input textarea:focus { outline: 2px solid var(--mm-color-primary); outline-offset: 1px; }
+.ns-input ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.ns-input li label {
+  display: inline-flex; align-items: center; gap: 0.35rem;
+  padding: 0.35rem 0.75rem;
+  border: 1px solid var(--mm-color-border-input);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.ns-actions { display: flex; justify-content: flex-end; }
+.ns-btn {
+  display: inline-block;
+  padding: 0.6rem 1.5rem;
+  font-family: inherit; font-size: 1rem; font-weight: 700;
+  text-decoration: none; text-align: center;
+  cursor: pointer;
+  border: 1px solid transparent; border-radius: 0.5rem;
+}
+.ns-btn-primary { color: var(--mm-color-on-primary); background: var(--mm-color-primary); }
+.ns-btn-primary:hover { filter: brightness(0.92); }
+.ns-btn-wide { min-width: 12rem; }
+
+/* 3. 予定一覧(日付ごと) */
+.ns-timeline { display: flex; flex-direction: column; gap: 1.1rem; }
+.ns-day-title {
+  margin: 0 0 0.4rem;
+  font-size: 0.875rem; font-weight: 700;
+  color: var(--mm-color-secondary);
+}
+.ns-day-items { display: flex; flex-direction: column; gap: 0.5rem; }
+.ns-item {
+  display: grid;
+  grid-template-columns: 3.5rem 1fr auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.7rem 0.9rem;
+  background: var(--mm-color-surface-light);
+  border-left: 5px solid var(--mm-color-border-input);
+  border-radius: 0.6rem;
+}
+.ns-item-time { font-weight: 700; font-variant-numeric: tabular-nums; color: var(--mm-color-text); }
+.ns-item-theme { color: var(--mm-color-text); word-break: break-all; }
+
+.ns-item-pending { border-left-color: var(--mm-color-primary); }
+.ns-item-done { border-left-color: #1a7f4b; }
+.ns-item-overdue { border-left-color: #b42318; background: #fef3f2; }
+
+.ns-badge { padding: 0.15rem 0.7rem; font-size: 0.8125rem; font-weight: 700; border-radius: 999px; white-space: nowrap; }
+.ns-badge-pending { color: #1d4ed8; background: #dbeafe; }
+.ns-badge-done { color: #1a7f4b; background: #dcfce7; }
+.ns-badge-overdue { color: #b42318; background: #fee2e2; }
+
+.ns-empty { margin: 0; padding: 2rem 0; text-align: center; color: var(--mm-color-secondary); }
+
+.ns-item-skipped { border-left-color: #6b7280; }
+.ns-badge-skipped { color: #374151; background: #e5e7eb; }

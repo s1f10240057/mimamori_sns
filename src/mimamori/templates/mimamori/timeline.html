@@ -1,79 +1,81 @@
+{% load static %}
+{% load relative_time %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="{% static 'mimamori/css/timeline.css' %}">
+  <title>アルバム - 見守りSNS</title>
 </head>
-<body>
-    <h1>タイムライン</h1>
-    {% if user_pair %}
-    <div>
-        <a href="{% querystring filter='pair' %}">
-            自分のペアの画像だけ表示する
-        </a>
-    </div>
-    {% else%}
-    <p>ペアがいません！！！</p>
-    {% endif %}
 
-    <div>
-        <form id="uploadForm">
-            {% csrf_token %}
-            <input type="file" id="photo" accept="image/png, image/jpeg">
-            <button type="button" id="submitBtn">投稿</button>
-        </form>
-    </div>
+<body{% if is_watcher %} class="role-a"{% endif %}>
+  <div class="container mx-auto text-center">
 
-    {% if photos %}
-        
+    {% if is_watcher %}{% include "mimamori/partials/watcher_topbar.html" with active="timeline" %}{% endif %}
+
+    <div class="mm-page">
+
+      <!-- ペアごとの最終投稿 -->
+      {% if is_watcher %}
+      <section class="mm-card mm-last">
+        <h2 class="mm-last-title">最後の投稿</h2>
+        {% if last_posts %}
+        <ul class="mm-last-list">
+          {% for p in last_posts %}
+          <li class="mm-last-item">
+            <span class="mm-last-name">{{ p.user.name|default:p.user.account_id }}</span>
+            {% if p.last %}
+            <span class="mm-last-time" title="{{ p.last|date:'Y/m/d H:i' }}">{{ p.last|ago }}</span>
+            {% else %}
+            <span class="mm-last-time mm-last-none">まだ投稿なし</span>
+            {% endif %}
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="mm-last-none">ペアがいません。</p>
+        {% endif %}
+      </section>
+      {% endif %}
+
+      <div class="mm-section-head">
+        <h3 class="mm-section-title">写真アルバム</h3>
+        <span class="mm-muted-small">最新順</span>
+      </div>
+
+      <div class="timeline-feed">
         {% for item in photos %}
-        <p> 投稿者: {{ item.posted_user.name }}</p>
-        <img src="{{ item.image.url }}" alt="投稿画像" style="max-width: 300px;">
+        <div class="mm-card mm-card-clip">
+          <div class="mm-card-header">
+            <div class="mm-avatar"><i class="bi bi-person-fill"></i></div>
+            <div>
+              <h6 class="mm-poster-name">{{ item.posted_user.name }}</h6>
+              <small class="mm-muted-small">{{ item.created_at|date:"Y/m/d H:i" }}</small>
+            </div>
+          </div>
+          <div class="mm-photo-wrap">
+            <img src="{{ item.image.url }}" alt="投稿画像" class="mm-photo">
+          </div>
+        </div>
+        {% empty %}
+        <p class="mm-last-none">ペアの投稿はまだありません。</p>
         {% endfor %}
+      </div>
+    </div>
+
+    {% if not is_watcher %}
+    <!-- B(高齢者): 下部の大きなナビ -->
+    <nav class="mm-nav">
+      <div class="mm-nav-inner">
+        <a href="{% url 'mimamori:index' %}" class="mm-nav-link mm-nav-active">
+          <i class="bi bi-house-door-fill mm-nav-icon"></i>
+          <span class="mm-nav-label mm-bold" style="font-size: 2rem;">メニューに戻る</span>
+        </a>
+      </div>
+    </nav>
     {% endif %}
 
-    <script>
-        const button = document.getElementById("submitBtn");
-        button.addEventListener("click", async () => {
-            const fileInput = document.getElementById("photo");
-            const token = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
-            // ファイルが選択されているかチェック
-            if (fileInput.files.length === 0) {
-                alert("ファイルを選択してください");
-                return;
-            }
-
-            // FormDataを使って画像ファイルを含めたデータを構築
-            const formData = new FormData();
-            formData.append("photo", fileInput.files[0]); // 実際のファイルオブジェクトを追加
-
-            try {
-                const response = await fetch("{% url 'mimamori:photo' %}", {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRFToken': token
-                    },
-                    body: formData
-                });
-
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-
-                const data = await response.json();
-                if (data.success === true) {
-                    alert("アップロード成功しました！");
-                    location.reload();
-                } else {
-                    alert("登録に失敗しました。もう一度やり直してください");
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert("通信エラーが発生しました");
-            }
-        });
-    </script>
+  </div>
 </body>
 </html>
