@@ -19,6 +19,14 @@ class NotificationSettingForm(ReceiverFieldMixin, forms.ModelForm):
     class Meta:
         model = NotificationSetting
         fields = ["receive_user", "notify_at", "enabled", "task_theme"]
+
+        labels = {
+            "receive_user": "送る相手",
+            "notify_at": "通知する日時",
+            "enabled": "enabled",
+            "task_theme": "写真のお題",
+        }
+
         widgets = {
             "notify_at": forms.DateTimeInput(
                 attrs={"type": "datetime-local"},

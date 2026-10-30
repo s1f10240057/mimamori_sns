@@ -1,3 +1,4 @@
+
 {% load static %}
 <!DOCTYPE html>
 <html lang="ja">
@@ -15,10 +16,53 @@
         <section class="card" id="formArea" hidden>
             <form id="uploadForm" class="task-form">
                 {% csrf_token %}
-                <p class="card-text">今日の写真を1枚送ってください。</p>
+                <p class="card-text">お題に応じた写真を送ってください！！！</p>
+                <p class="card-text">お題: {{task_theme}}</p>
 
-                <input type="file" id="photo" class="visually-hidden" accept="image/png, image/jpeg">
-                <label for="photo" class="btn btn-choose">写真を選ぶ</label>
+                <input
+                    type="file"
+                    id="photo"
+                    class="visually-hidden"
+                    accept="image/png, image/jpeg"
+                >
+
+                <!-- ★変更：両方ともbuttonに統一 -->
+                <div class="photo-buttons" style="display:flex; flex-direction: column;">
+                    <button type="button" id="cameraBtn"
+                            class="btn btn-choose">
+                        写真を撮る
+                    </button>
+
+                    <button type="button" id="selectPhotoBtn"
+                            class="btn btn-choose">
+                        写真を選ぶ
+                    </button>
+                </div>
+
+                <!-- カメラ映像表示エリア -->
+                <div id="cameraArea" class="preview-area" hidden>
+                    <video
+                        id="cameraVideo"
+                        autoplay
+                        playsinline
+                        muted
+                        style="width:100%; max-width:500px;"
+                    ></video>
+
+                    <div class="photo-buttons" style="display:flex; flex-direction: column;">
+                        <button type="button" id="takePhotoBtn"
+                                class="btn btn-choose">
+                            撮影する
+                        </button>
+
+                        <button type="button" id="cancelCameraBtn"
+                                class="btn btn-choose btn-choose-sub">
+                            キャンセル
+                        </button>
+                    </div>
+                </div>
+
+                <canvas id="cameraCanvas" hidden></canvas>
 
                 <div id="previewArea" class="preview-area" hidden>
                     <img id="preview" class="preview-img" alt="選んだ写真">
@@ -27,8 +71,15 @@
 
                 <p id="errorMsg" class="error-msg" role="alert" hidden></p>
 
-                <button type="button" id="submitBtn" class="btn btn-send" disabled>この写真を送る</button>
-                <button type="button" id="skipBtn" class="btn btn-small btn-skip">今日はお休みする</button>
+                <button type="button" id="submitBtn"
+                        class="btn btn-send" disabled>
+                    この写真を送る
+                </button>
+
+                <button type="button" id="skipBtn"
+                        class="btn btn-small btn-skip">
+                    スキップする
+                </button>
             </form>
         </section>
 
@@ -39,15 +90,21 @@
 
         <section class="card done-card" id="skippedArea" hidden>
             <p class="done-mark done-mark-skip">–</p>
-            <p class="done-text">お休みを伝えました。<br>また次回お待ちしています。</p>
+            <p class="done-text">スキップしました。<br>また次回お待ちしています。</p>
         </section>
 
         <section class="card" id="unavailableArea" hidden>
-            <p class="card-text">このタスクは、送信済みか、<br>開けないタスクです。</p>
+            <p class="card-text">
+                このタスクは、送信済みか、<br>
+                開けないタスクです。
+            </p>
         </section>
 
         <div class="page-footer">
-            <a href="{% url 'mimamori:index' %}" class="btn btn-small">メニューに戻る</a>
+            <a href="{% url 'mimamori:index' %}"
+               class="btn btn-small">
+                メニューに戻る
+            </a>
         </div>
     </main>
 
@@ -55,8 +112,13 @@
     {{ task_id|json_script:"task-id" }}
 
     <script>
-        const taskAvailable = JSON.parse(document.getElementById("task-available").textContent);
-        const taskId = JSON.parse(document.getElementById("task-id").textContent);
+        const taskAvailable = JSON.parse(
+            document.getElementById("task-available").textContent
+        );
+
+        const taskId = JSON.parse(
+            document.getElementById("task-id").textContent
+        );
 
         const fileInput = document.getElementById("photo");
         const submitBtn = document.getElementById("submitBtn");
@@ -69,7 +131,23 @@
         const skippedArea = document.getElementById("skippedArea");
         const unavailableArea = document.getElementById("unavailableArea");
 
-        // 表示の切り替えはここだけで行う
+        const cameraBtn = document.getElementById("cameraBtn");
+
+        // ★追加：写真選択ボタン
+        const selectPhotoBtn = document.getElementById("selectPhotoBtn");
+
+        const cameraArea = document.getElementById("cameraArea");
+        const cameraVideo = document.getElementById("cameraVideo");
+        const cameraCanvas = document.getElementById("cameraCanvas");
+        const takePhotoBtn = document.getElementById("takePhotoBtn");
+        const cancelCameraBtn = document.getElementById("cancelCameraBtn");
+
+        let selectedFile = null;
+        let cameraStream = null;
+        let previewUrl = null;
+        let cameraRequestId = 0;
+
+        // 表示の切り替え
         function showOnly(target) {
             [formArea, doneArea, skippedArea, unavailableArea].forEach(el => {
                 el.hidden = (el !== target);
@@ -83,69 +161,255 @@
 
         showOnly(taskAvailable ? formArea : unavailableArea);
 
-        fileInput.addEventListener("change", () => {
-            errorMsg.hidden = true;
-            const file = fileInput.files[0];
-            if (!file) {
-                previewArea.hidden = true;
-                submitBtn.disabled = true;
+        // カメラを停止
+        function stopCamera() {
+            cameraRequestId++;
+
+            if (cameraStream !== null) {
+                cameraStream.getTracks().forEach(track => track.stop());
+                cameraStream = null;
+            }
+
+            cameraVideo.pause();
+            cameraVideo.srcObject = null;
+            cameraArea.hidden = true;
+            cameraBtn.disabled = false;
+        }
+
+        // 撮影・選択した写真を共通管理
+        function setPhoto(file) {
+            if (!file) return;
+
+            if (!["image/jpeg", "image/png"].includes(file.type)) {
+                showError("JPEGまたはPNG形式の写真を選んでください。");
                 return;
             }
-            preview.src = URL.createObjectURL(file);
+
+            selectedFile = file;
+            errorMsg.hidden = true;
+
+            if (previewUrl !== null) {
+                URL.revokeObjectURL(previewUrl);
+            }
+
+            previewUrl = URL.createObjectURL(file);
+            preview.src = previewUrl;
+
             previewArea.hidden = false;
             submitBtn.disabled = false;
+        }
+
+        // ★追加：写真を選ぶボタンからファイル選択画面を開く
+        selectPhotoBtn.addEventListener("click", () => {
+            fileInput.click();
+        });
+
+        // PCのWebカメラを起動
+        cameraBtn.addEventListener("click", async () => {
+            errorMsg.hidden = true;
+
+            if (!navigator.mediaDevices?.getUserMedia) {
+                showError(
+                    "この環境ではカメラを利用できません。HTTPSまたはlocalhostで開いてください。"
+                );
+                return;
+            }
+
+            stopCamera();
+
+            const requestId = cameraRequestId;
+            cameraBtn.disabled = true;
+
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: { ideal: "environment" }
+                    },
+                    audio: false
+                });
+
+                if (requestId !== cameraRequestId) {
+                    stream.getTracks().forEach(track => track.stop());
+                    return;
+                }
+
+                cameraStream = stream;
+                cameraVideo.srcObject = stream;
+
+                cameraArea.hidden = false;
+                previewArea.hidden = true;
+
+                await cameraVideo.play();
+
+                cameraBtn.disabled = false;
+
+            } catch (error) {
+                console.error("カメラ起動エラー:", error);
+
+                if (requestId !== cameraRequestId) return;
+
+                stopCamera();
+
+                showError(
+                    "カメラを起動できませんでした。カメラの接続やブラウザの権限を確認してください。"
+                );
+            }
+        });
+
+        // カメラで写真を撮影
+        takePhotoBtn.addEventListener("click", () => {
+            if (!cameraStream || !cameraVideo.videoWidth) {
+                showError("カメラの準備ができていません。");
+                return;
+            }
+
+            cameraCanvas.width = cameraVideo.videoWidth;
+            cameraCanvas.height = cameraVideo.videoHeight;
+
+            const context = cameraCanvas.getContext("2d");
+
+            context.drawImage(
+                cameraVideo,
+                0,
+                0,
+                cameraCanvas.width,
+                cameraCanvas.height
+            );
+
+            cameraCanvas.toBlob(blob => {
+                if (!blob) {
+                    showError("写真の撮影に失敗しました。");
+                    return;
+                }
+
+                const file = new File(
+                    [blob],
+                    "camera_" + Date.now() + ".jpg",
+                    { type: "image/jpeg" }
+                );
+
+                setPhoto(file);
+                stopCamera();
+
+            }, "image/jpeg", 0.9);
+        });
+
+        // カメラをキャンセル
+        cancelCameraBtn.addEventListener("click", () => {
+            stopCamera();
+            previewArea.hidden = selectedFile === null;
+        });
+
+        // 既存の写真を選択
+        fileInput.addEventListener("change", () => {
+            const file = fileInput.files[0];
+
+            if (!file) return;
+
+            stopCamera();
+            setPhoto(file);
+
+            fileInput.value = "";
         });
 
         // 提出・スキップ共通の送信処理
         async function send({ skip }) {
-            const token = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            const token = document.querySelector(
+                '[name=csrfmiddlewaretoken]'
+            ).value;
+
             const formData = new FormData();
+
             formData.append("task_id", taskId);
+
             if (skip) {
                 formData.append("skip", "true");
             } else {
-                formData.append("photo", fileInput.files[0]);
+                formData.append("photo", selectedFile);
             }
+
+            stopCamera();
 
             submitBtn.disabled = true;
             skipBtn.disabled = true;
+            cameraBtn.disabled = true;
+            selectPhotoBtn.disabled = true;
+            fileInput.disabled = true;
             errorMsg.hidden = true;
 
             try {
-                const response = await fetch("{% url 'mimamori:photo' %}", {
-                    method: "POST",
-                    headers: { "X-CSRFToken": token },
-                    body: formData
-                });
+                const response = await fetch(
+                    "{% url 'mimamori:photo' %}",
+                    {
+                        method: "POST",
+                        headers: {
+                            "X-CSRFToken": token
+                        },
+                        body: formData
+                    }
+                );
+
                 if (response.status === 404) {
                     showOnly(unavailableArea);
                     return;
                 }
-                if (!response.ok) throw new Error("bad status");
+
+                if (!response.ok) {
+                    throw new Error("bad status");
+                }
+
                 const data = await response.json();
-                if (data.success !== true) throw new Error("failed");
+
+                if (data.success !== true) {
+                    throw new Error("failed");
+                }
+
                 showOnly(skip ? skippedArea : doneArea);
-            } catch (e) {
-                console.error(e);
-                showError("送れませんでした。もう一度お試しください。");
+
+            } catch (error) {
+                console.error(error);
+
+                showError(
+                    "送れませんでした。もう一度お試しください。"
+                );
+
                 skipBtn.disabled = false;
-                submitBtn.disabled = fileInput.files.length === 0;
+                submitBtn.disabled = selectedFile === null;
+                cameraBtn.disabled = false;
+                selectPhotoBtn.disabled = false;
+                fileInput.disabled = false;
                 submitBtn.textContent = "この写真を送る";
             }
         }
 
+        // 写真を送信
         submitBtn.addEventListener("click", () => {
-            if (fileInput.files.length === 0) {
+            if (selectedFile === null) {
                 showError("写真を選んでください。");
                 return;
             }
+
             submitBtn.textContent = "送っています…";
             send({ skip: false });
         });
 
+        // スキップ
         skipBtn.addEventListener("click", () => {
-            if (!confirm("今日はお休みしますか？")) return;
+            if (!confirm("今日はお休みしますか？")) {
+                return;
+            }
+
             send({ skip: true });
+        });
+
+        // ページを離れる際にカメラを停止
+        window.addEventListener("pagehide", () => {
+            stopCamera();
+
+            if (previewUrl !== null) {
+                URL.revokeObjectURL(previewUrl);
+                previewUrl = null;
+            }
         });
     </script>
 </body>
