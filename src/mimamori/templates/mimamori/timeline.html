@@ -53,8 +53,15 @@
               <h6 class="mm-poster-name">{{ item.posted_user.name }}</h6>
               <small class="mm-muted-small">{{ item.created_at|date:"Y/m/d H:i" }}</small>
             </div>
+           
           </div>
+           {% if item.task %}
+              <div class="mm-muted-small">お題: {{ item.task.task_theme }}</div>
+            {% else %}
+              <div class="mm-muted-small">お題無し</div>
+            {% endif %}
           <div class="mm-photo-wrap">
+            
             <img src="{{ item.image.url }}" alt="投稿画像" class="mm-photo">
           </div>
         </div>

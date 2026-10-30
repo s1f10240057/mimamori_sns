@@ -214,6 +214,27 @@
   radios.forEach(r => r.addEventListener("change", load));
   window.addEventListener("load", load);
 </script>
+<script>
+  (function () {
+    const input = document.querySelector('#taskForm input[type="datetime-local"]');
+    if (!input) return;
 
+    // ローカル時刻を "YYYY-MM-DDTHH:MM" 形式で返す
+    function nowLocal() {
+      const d = new Date();
+      d.setSeconds(0, 0);
+      const pad = n => String(n).padStart(2, "0");
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+
+    // 表示時に空なら現在時刻を入れる
+    if (!input.value) input.value = nowLocal();
+
+    // 送信時にも空なら補完(手動で消された場合の保険)
+    document.getElementById("taskForm").addEventListener("submit", () => {
+      if (!input.value) input.value = nowLocal();
+    });
+  })();
+</script>
 </body>
 </html>
