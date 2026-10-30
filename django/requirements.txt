@@ -5,3 +5,5 @@ Pillow
 dj-database-url
 celery>=5.3
 redis>=5.0
+whitenoise
+django-cloudinary-storage
