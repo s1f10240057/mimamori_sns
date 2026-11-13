@@ -21,7 +21,7 @@ def _open_task_qs(user):
         receive_user=user,
         task_ended__isnull=True,
         skipped_at__isnull=True,
-        enabled=True,
+        # enabled=True,
     )
 
 def _get_my_open_task(user, task_id):
@@ -54,20 +54,20 @@ def timeline(request):
     pairs = get_pairs(request.user)
     pair_ids = [u.id for u in pairs]
 
-    # ペアが送信した投稿だけ
     if request.user.role == "A":
         photos = (
             Photo.objects
             .filter(posted_user_id__in=pair_ids)
-            .select_related("posted_user")
+            .select_related("posted_user", "task")
             .order_by("-created_at")
         )
     else:
         photos = (
             Photo.objects
+            .select_related("posted_user", "task")
             .order_by("-created_at")
         )
-    # ペアごとの最終投稿時刻(1クエリで集計)
+
     last_map = dict(
         Photo.objects
         .filter(posted_user_id__in=pair_ids)
@@ -84,6 +84,7 @@ def timeline(request):
         "photos": photos,
         "last_posts": last_posts,
         "is_watcher": request.user.role == "A",
+        # "task_theme" は削除
     })
 
 # def postPhotoAPI(request):
@@ -148,8 +149,8 @@ def invite(request, token):
     return render(request, "mimamori/invite.html", context)
 
 
-def doTask(request, taskId):
-    return render(request, "mimamori/task.html", {"task_id": taskId})
+# def doTask(request, taskId):
+#     return render(request, "mimamori/task.html", {"task_id": taskId})
 
 @login_required
 def pair(request):
@@ -177,7 +178,7 @@ def _get_my_open_task(user, task_id):
         id=task_id,
         receive_user=user,
         task_ended__isnull=True,
-        enabled=True,
+        # enabled=True,
     ).first()
 
 
@@ -186,11 +187,21 @@ from django.http import Http404
 @login_required
 def doTask(request, taskId):
     task = _get_my_open_task(request.user, taskId)
+    if task is None:
+        n = NotificationSetting.objects.filter(id=taskId).first()
+        print("DEBUG doTask:", {
+            "login_user": request.user.id,
+            "exists": n is not None,
+            "receive_user": n.receive_user_id if n else None,
+            "enabled": n.enabled if n else None,
+            "task_ended": n.task_ended_id if n else None,
+            "skipped_at": n.skipped_at if n else None,
+        })
     return render(request, "mimamori/task.html", {
         "task_id": task.id if task else "",
         "task_available": task is not None,
+        "task_theme": task.task_theme if task else "",
     })
-
 
 @login_required
 @require_POST
@@ -199,11 +210,9 @@ def postPhotoAPI(request):
     task_id = request.POST.get('task_id')
     skip = request.POST.get('skip') == "true"
 
-    # スキップ以外は写真が必須
     if photo_data is None and not skip:
         return JsonResponse({"success": False, "error": "no_photo"}, status=400)
 
-    # task_id なしの通常投稿(スキップは対象タスクが必要)
     if not task_id:
         if skip:
             return JsonResponse({"success": False, "error": "bad_task"}, status=400)
@@ -214,6 +223,7 @@ def postPhotoAPI(request):
         task_id = int(task_id)
     except ValueError:
         return JsonResponse({"success": False, "error": "bad_task"}, status=400)
+
 
     with transaction.atomic():
         noti = (
@@ -229,7 +239,8 @@ def postPhotoAPI(request):
             noti.skipped_at = timezone.now()
             noti.save(update_fields=["skipped_at"])
         else:
-            photo = Photo.objects.create(image=photo_data, posted_user=request.user)
+            photo =Photo.objects.create(image=photo_data, posted_user=request.user,
+                                          task=NotificationSetting.objects.get(id=task_id))
             noti.task_ended = photo
             noti.save(update_fields=["task_ended"])
 

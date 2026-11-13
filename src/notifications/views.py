@@ -1,4 +1,5 @@
 import json
+import traceback
 from zoneinfo import ZoneInfo
 
 from django.contrib import messages
@@ -90,8 +91,8 @@ def getNotificationAPI(request):
                 "done": i.task_ended_id is not None or i.skipped_at is not None,
             } for i in qs],
         }
-    except Exception as e:
-        print(e)
+    except Exception:
+        traceback.print_exc()
         response_data = {"success": False}
     return JsonResponse(response_data)
 

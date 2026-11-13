@@ -58,7 +58,7 @@ class NotificationSetting(models.Model):
     date = models.DateField(null=True, blank=True)
 
     task_ended = models.ForeignKey(
-        Photo,
+        "mimamori.Photo",
         null=True,
         blank=True,
         on_delete=models.SET_NULL,

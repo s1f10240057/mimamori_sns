@@ -22,6 +22,13 @@ class Photo(models.Model):
     )
     image = models.ImageField(upload_to='photos/')
     created_at = models.DateTimeField(default=timezone.now)
+    task = models.ForeignKey(
+        "notifications.NotificationSetting",
+        on_delete=models.CASCADE,
+        related_name="photos",
+        null=True,
+        blank=True
+    )
 
 
 FRIEND_CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
