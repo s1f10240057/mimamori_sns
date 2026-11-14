@@ -105,6 +105,7 @@
   background: var(--mm-color-surface);
   border: 1px solid var(--mm-color-border-input);
   border-radius: 0.5rem;
+  box-sizing: border-box;
 }
 .ns-input input:focus,
 .ns-input select:focus,
