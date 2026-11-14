@@ -42,7 +42,9 @@ def generate_for_month(year, month, rules=None):
                     receive_user_id=rule.receive_user_id,
                     rule=rule,
                     date=d,
+                    task_theme=rule.task_theme,
                     notify_at=notify_at,
+                    enabled=rule.enabled,
                 )
             )
     NotificationSetting.objects.bulk_create(new_rows, ignore_conflicts=True)
