@@ -40,8 +40,8 @@ def send_notification_mail(self, user_id, task_id):
     try:
         url = f"{settings.SITE_URL}/mimamori/doTask/{task_id}"
         send_mail(
-            subject="タスクが届きました！！！",
-            message=f"""{user.get_username()} さん、本日のタスクが届きました。
+            subject="お題が届きました！！！",
+            message=f"""{user.get_username()} さん、本日のお題が届きました。
 URL先から行うことができます。
 URL: {url}""",
             from_email=None,

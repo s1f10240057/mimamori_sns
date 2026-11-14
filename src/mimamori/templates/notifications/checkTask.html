@@ -4,14 +4,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>タスク一覧 - 見守りSNS</title>
+    <title>お題一覧 - 見守りSNS</title>
     <link rel="stylesheet" href="{% static 'mimamori/css/common.css' %}">
     <link rel="stylesheet" href="{% static 'mimamori/css/checkTask.css' %}">
 </head>
 <body>
     <main class="page">
         {% csrf_token %}
-        <h1 class="page-title">タスク一覧</h1>
+        <h1 class="page-title">お題一覧</h1>
 
         <section id="todoSection" class="task-section" hidden>
             <h2 class="section-title">新着</h2>
@@ -23,7 +23,7 @@
             <ul id="doneList" class="task-list"></ul>
         </section>
 
-        <p id="emptyMsg" class="empty-msg" hidden>タスクはありません。</p>
+        <p id="emptyMsg" class="empty-msg" hidden>お題はありません。</p>
         <p id="errorMsg" class="error-msg" role="alert" hidden>読み込めませんでした。<br>画面を開き直してください。</p>
 
         <div class="page-footer">

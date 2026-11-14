@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>タスク設定 - 見守りSNS</title>
+  <title>お題設定 - 見守りSNS</title>
   <link rel="stylesheet" href="{% static 'mimamori/css/timeline.css' %}">
   <link rel="stylesheet" href="{% static 'mimamori/css/setting.css' %}">
 </head>
@@ -14,8 +14,8 @@
 
   <main class="ns-page">
     <div class="ns-head">
-      <h1 class="ns-title">タスク設定</h1>
-      <p class="ns-lead">見守る相手を選んで、タスクを出す時間を決めます。</p>
+      <h1 class="ns-title">お題設定</h1>
+      <p class="ns-lead">見守る相手を選んで、お題を出す時間を決めます。</p>
     </div>
 
     {% if messages %}
@@ -49,17 +49,17 @@
 
     <div class="ns-columns">
 
-      <!-- 2. 左: タスクを作る / 定期通知設定 -->
+      <!-- 2. 左: お題を作る / 定期通知設定 -->
       <section class="ns-card">
         <header class="ns-card-head">
           <div class="ns-tabs" role="tablist">
-            <button type="button" class="ns-tab-btn active" id="tabBtnSingle" data-tab="paneSingle" role="tab" aria-selected="true">1回だけのタスク</button>
+            <button type="button" class="ns-tab-btn active" id="tabBtnSingle" data-tab="paneSingle" role="tab" aria-selected="true">1回だけのお題</button>
             <button type="button" class="ns-tab-btn" id="tabBtnWeekly" data-tab="paneWeekly" role="tab" aria-selected="false">毎週の定期通知</button>
           </div>
-          <p class="ns-card-sub" id="formSubText">指定した日時に1回だけ写真を送るタスクを出します。</p>
+          <p class="ns-card-sub" id="formSubText">指定した日時に1回だけ写真を送るお題を出します。</p>
         </header>
 
-        <!-- 単発タスク -->
+        <!-- 単発お題 -->
         <div id="paneSingle" class="ns-tab-pane">
           <form method="post" class="ns-form" id="taskForm">
             {% csrf_token %}
@@ -160,7 +160,7 @@
                     {% if rule.enabled %}有効{% else %}一時停止中{% endif %}
                   </button>
                 </form>
-                <form method="post" action="{% url 'notifications:delete_weekly_rule' rule.pk %}" style="margin:0;" onsubmit="return confirm('この定期通知ルールを削除しますか？（未送信のタスクも削除されます）');">
+                <form method="post" action="{% url 'notifications:delete_weekly_rule' rule.pk %}" style="margin:0;" onsubmit="return confirm('この定期通知ルールを削除しますか？（未送信のお題も削除されます）');">
                   {% csrf_token %}
                   <button type="submit" class="ns-btn-sm ns-btn-danger-sm">削除</button>
                 </form>
@@ -177,7 +177,7 @@
       <!-- 3. 右: 予定一覧 -->
       <section class="ns-card">
         <header class="ns-card-head">
-          <h2 class="ns-card-title">出したタスク</h2>
+          <h2 class="ns-card-title">出したお題</h2>
           <p class="ns-card-sub" id="listSub"></p>
         </header>
 
@@ -190,7 +190,7 @@
         </div>
 
         <div id="lstBoard" class="ns-timeline"></div>
-        <p id="emptyMsg" class="ns-empty" hidden>この人へのタスクは、まだありません。</p>
+        <p id="emptyMsg" class="ns-empty" hidden>この人へのお題は、まだありません。</p>
         <p id="errorMsg" class="ns-error-box" hidden>読み込めませんでした。</p>
       </section>
 
@@ -306,7 +306,7 @@
 
     if (filtered.length === 0) {
       emptyMsg.hidden = false;
-      emptyMsg.textContent = currentFilter === "all" ? "この人へのタスクは、まだありません。" : "該当するタスクはありません。";
+      emptyMsg.textContent = currentFilter === "all" ? "この人へのお題は、まだありません。" : "該当するお題はありません。";
       return;
     }
 
@@ -421,8 +421,8 @@
     const formSubText = document.getElementById("formSubText");
 
     const subTexts = {
-      paneSingle: "指定した日時に1回だけ写真を送るタスクを出します。",
-      paneWeekly: "決まった曜日と時間に、自動でタスクを作成して通知します。",
+      paneSingle: "指定した日時に1回だけ写真を送るお題を出します。",
+      paneWeekly: "決まった曜日と時間に、自動でお題を作成して通知します。",
     };
 
     function switchTab(targetId) {

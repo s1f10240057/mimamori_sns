@@ -43,7 +43,7 @@ def notification_setting(request, pk=None):
             if s.pk is None or {"notify_at", "receive_user"} & set(form.changed_data):
                 s.sent_at = None
             s.save()
-            messages.success(request, "タスクを保存しました。")
+            messages.success(request, "お題を保存しました。")
             return redirect("notifications:notification_settings")
 
     rule_form = WeeklyNotificationRuleForm(created_user=request.user)
