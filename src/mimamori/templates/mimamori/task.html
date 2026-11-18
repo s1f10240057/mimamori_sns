@@ -5,19 +5,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>タスク - 見守りSNS</title>
+    <title>お題 - 見守りSNS</title>
     <link rel="stylesheet" href="{% static 'mimamori/css/common.css' %}">
     <link rel="stylesheet" href="{% static 'mimamori/css/task.css' %}">
 </head>
 <body>
     <main class="page">
-        <h1 class="page-title">タスク</h1>
+        <h1 class="page-title">お題</h1>
 
         <section class="card" id="formArea" hidden>
             <form id="uploadForm" class="task-form">
                 {% csrf_token %}
                 <p class="card-text">お題に応じた写真を送ってください！！！</p>
-                <p class="card-text">お題: {{task_theme}}</p>
 
                 <input
                     type="file"
@@ -78,7 +77,7 @@
 
                 <button type="button" id="skipBtn"
                         class="btn btn-small btn-skip">
-                    スキップする
+                    今日は投稿しない
                 </button>
             </form>
         </section>
@@ -95,8 +94,8 @@
 
         <section class="card" id="unavailableArea" hidden>
             <p class="card-text">
-                このタスクは、送信済みか、<br>
-                開けないタスクです。
+                このお題は、送信済みか、<br>
+                開けないお題です。
             </p>
         </section>
 
