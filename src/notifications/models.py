@@ -26,6 +26,7 @@ class WeeklyNotificationRule(models.Model):
     )
     weekday = models.IntegerField(choices=Weekday.choices)
     notify_time = models.TimeField()
+    task_theme = models.CharField(max_length=20, blank=True, default="")
     enabled = models.BooleanField(default=True)
 
     class Meta:

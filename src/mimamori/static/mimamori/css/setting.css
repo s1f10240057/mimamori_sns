@@ -105,6 +105,7 @@
   background: var(--mm-color-surface);
   border: 1px solid var(--mm-color-border-input);
   border-radius: 0.5rem;
+  box-sizing: border-box;
 }
 .ns-input input:focus,
 .ns-input select:focus,
@@ -165,3 +166,319 @@
 
 .ns-item-skipped { border-left-color: #6b7280; }
 .ns-badge-skipped { color: #374151; background: #e5e7eb; }
+
+/* タブUI */
+.ns-tabs {
+  display: flex;
+  gap: 0.5rem;
+  border-bottom: 2px solid var(--mm-color-border);
+  margin-bottom: 1.25rem;
+}
+.ns-tab-btn {
+  background: none;
+  border: none;
+  padding: 0.5rem 1rem;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--mm-color-secondary);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: color 0.15s, border-color 0.15s;
+}
+.ns-tab-btn:hover {
+  color: var(--mm-color-primary);
+}
+.ns-tab-btn.active {
+  color: var(--mm-color-primary);
+  border-bottom-color: var(--mm-color-primary);
+}
+
+/* 定期ルール一覧 */
+.ns-rule-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px dashed var(--mm-color-border);
+}
+.ns-rule-list-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--mm-color-text);
+}
+.ns-rule-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 0.9rem;
+  background: var(--mm-color-surface-light);
+  border: 1px solid var(--mm-color-border);
+  border-radius: 0.6rem;
+}
+.ns-rule-item.disabled {
+  opacity: 0.6;
+}
+.ns-rule-info {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+.ns-rule-weekday {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  background: var(--mm-color-primary);
+  color: var(--mm-color-on-primary);
+  border-radius: 50%;
+  font-weight: 700;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+.ns-rule-time {
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--mm-color-text);
+}
+.ns-rule-target {
+  font-size: 0.8125rem;
+  color: var(--mm-color-secondary);
+}
+.ns-rule-theme {
+  font-size: 0.875rem;
+  color: var(--mm-color-text);
+  background: var(--mm-color-surface);
+  padding: 0.15rem 0.5rem;
+  border-radius: 0.25rem;
+  border: 1px solid var(--mm-color-border);
+}
+.ns-rule-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+.ns-btn-sm {
+  padding: 0.35rem 0.7rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  border: 1px solid var(--mm-color-border);
+  background: var(--mm-color-surface);
+  color: var(--mm-color-text);
+}
+.ns-btn-sm:hover {
+  background: var(--mm-color-surface-light);
+}
+.ns-btn-danger-sm {
+  color: #b42318;
+  border-color: #fee2e2;
+  background: #fff;
+}
+.ns-btn-danger-sm:hover {
+  background: #fef3f2;
+  border-color: #fca5a5;
+}
+.ns-btn-toggle-on {
+  color: #1a7f4b;
+  border-color: #dcfce7;
+  background: #f0fdf4;
+}
+.ns-btn-toggle-off {
+  color: #6b7280;
+  border-color: #e5e7eb;
+  background: #f9fafb;
+}
+
+/* 曜日複数選択UI */
+.ns-field-full { grid-column: 1 / -1; }
+
+.ns-field-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.ns-quick-select {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.ns-quick-btn {
+  padding: 0.2rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 0.25rem;
+  border: 1px solid var(--mm-color-border);
+  background: var(--mm-color-surface-light);
+  color: var(--mm-color-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.ns-quick-btn:hover {
+  background: var(--mm-color-surface);
+  color: var(--mm-color-primary);
+  border-color: var(--mm-color-primary);
+}
+
+.ns-weekdays-container ul {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  list-style: none;
+  padding: 0;
+  margin: 0.35rem 0 0;
+}
+
+.ns-weekdays-container li {
+  margin: 0;
+}
+
+.ns-weekdays-container li label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.5rem;
+  height: 2.5rem;
+  padding: 0 0.5rem;
+  border: 2px solid var(--mm-color-border);
+  border-radius: 0.5rem;
+  background: var(--mm-color-surface);
+  color: var(--mm-color-text);
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s ease;
+}
+
+.ns-weekdays-container li label:hover {
+  border-color: var(--mm-color-primary);
+}
+
+.ns-weekdays-container li label:has(input:checked) {
+  background: var(--mm-color-primary);
+  border-color: var(--mm-color-primary);
+  color: var(--mm-color-on-primary);
+  box-shadow: 0 2px 4px rgba(13, 110, 253, 0.25);
+}
+
+.ns-weekdays-container li input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* 右カラム: タスクフィルタータブ */
+.ns-task-tabs {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--mm-color-border);
+  overflow-x: auto;
+}
+.ns-task-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.75rem;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--mm-color-secondary);
+  background: var(--mm-color-surface-light);
+  border: 1px solid var(--mm-color-border);
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+.ns-task-tab:hover {
+  border-color: var(--mm-color-primary);
+  color: var(--mm-color-primary);
+}
+.ns-task-tab.active {
+  background: var(--mm-color-primary);
+  border-color: var(--mm-color-primary);
+  color: var(--mm-color-on-primary);
+}
+.ns-tab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.1rem 0.45rem;
+  font-size: 0.75rem;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.08);
+}
+.ns-task-tab.active .ns-tab-count {
+  background: rgba(255, 255, 255, 0.25);
+  color: #fff;
+}
+.ns-tab-count.has-overdue {
+  background: #fee2e2;
+  color: #b42318;
+}
+.ns-task-tab.active .ns-tab-count.has-overdue {
+  background: #fff;
+  color: #b42318;
+}
+
+/* 折りたたみ (details) スタイル */
+details.ns-day {
+  margin-bottom: 0.75rem;
+}
+summary.ns-day-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+  padding: 0.4rem 0.6rem;
+  margin-bottom: 0.4rem;
+  border-radius: 0.5rem;
+  background: var(--mm-color-surface-light);
+  color: var(--mm-color-secondary);
+  font-size: 0.875rem;
+  font-weight: 700;
+  list-style: none;
+  transition: background 0.15s ease;
+}
+summary.ns-day-title::-webkit-details-marker {
+  display: none;
+}
+summary.ns-day-title:hover {
+  background: var(--mm-color-border);
+  color: var(--mm-color-text);
+}
+summary.ns-day-title::after {
+  content: "▾";
+  font-size: 0.85rem;
+  transition: transform 0.2s ease;
+}
+details[open] summary.ns-day-title::after {
+  transform: rotate(0deg);
+}
+details:not([open]) summary.ns-day-title::after {
+  transform: rotate(-90deg);
+}
+.ns-day-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--mm-color-secondary);
+  margin-left: auto;
+  margin-right: 0.5rem;
+}
