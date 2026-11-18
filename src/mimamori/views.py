@@ -7,7 +7,7 @@ from accounts.models import User
 from mimamori.models import Photo, Invitation, PairRelationship
 from datetime import timedelta
 from django.utils import timezone
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_GET, require_POST
 from django.contrib.auth.decorators import login_required
 from django.db.models import Max
 
@@ -23,10 +23,6 @@ def _open_task_qs(user):
         skipped_at__isnull=True,
         # enabled=True,
     )
-
-def _get_my_open_task(user, task_id):
-    return _open_task_qs(user).filter(id=task_id).first()
-
 
 def root(request):
     return HttpResponse("Hello Django and Docker")
@@ -84,29 +80,7 @@ def timeline(request):
         "photos": photos,
         "last_posts": last_posts,
         "is_watcher": request.user.role == "A",
-        # "task_theme" は削除
     })
-
-# def postPhotoAPI(request):
-#     response_data = {"success" : False}
-#     if request.method == "POST":
-#         photo_data = request.FILES.get('photo')
-#         task_id = request.POST.get('task_id')
-#         photo = Photo(
-#             image = photo_data,
-#             posted_user = request.user,
-#         )
-#         photo.save()
-
-#         if task_id != None:
-#             noti = NotificationSetting.objects.get(id = int(task_id))
-#             noti.task_ended = photo
-#             noti.save()
-
-#         response_data = {
-#                 "success" : True,
-#         }
-#     return JsonResponse(response_data)
 
 @require_POST
 def getPairTokenAPI(request):
@@ -148,10 +122,6 @@ def invite(request, token):
     context["token"] = token
     return render(request, "mimamori/invite.html", context)
 
-
-# def doTask(request, taskId):
-#     return render(request, "mimamori/task.html", {"task_id": taskId})
-
 @login_required
 def pair(request):
     relations = (
@@ -172,17 +142,45 @@ def pair(request):
         "is_watcher": request.user.role == "A",
     })
 
+
+DEFAULT_WINDOW_MINUTES = 3
+MAX_WINDOW_MINUTES = 60
+
+
 def _get_my_open_task(user, task_id):
     """自分宛てで、未送信・有効なタスクだけ返す。なければ None"""
     return NotificationSetting.objects.filter(
         id=task_id,
         receive_user=user,
         task_ended__isnull=True,
-        # enabled=True,
     ).first()
 
 
-from django.http import Http404
+@require_GET
+def recent_tasks(request):
+    """直近 minutes 分以内に生成された自分宛ての有効タスクを返す"""
+    if not request.user.is_authenticated:
+        return JsonResponse({"detail": "ログインが必要です"}, status=401)
+
+    try:
+        minutes = int(request.GET.get("minutes", DEFAULT_WINDOW_MINUTES))
+    except ValueError:
+        return JsonResponse({"detail": "minutes は整数で指定してください"}, status=400)
+    minutes = max(1, min(minutes, MAX_WINDOW_MINUTES))
+
+    since = timezone.now() - timedelta(minutes=minutes)
+    tasks = list(
+        NotificationSetting.objects.filter(
+            receive_user=request.user,
+            task_ended__isnull=True,
+            notify_at__gte=since,
+        ).order_by("notify_at")[:50]
+    )
+
+    return JsonResponse({
+        "has_new": bool(tasks),
+        "tasks": [{"id": t.id, "notify_at": t.notify_at.isoformat()} for t in tasks],
+    })
 
 @login_required
 def doTask(request, taskId):
