@@ -15,8 +15,6 @@
     {% if is_watcher %}{% include "mimamori/partials/watcher_topbar.html" with active="timeline" %}{% endif %}
 
     <div class="mm-page">
-
-      <!-- ペアごとの最終投稿 -->
       {% if is_watcher %}
       <section class="mm-card mm-last">
         <h2 class="mm-last-title">最後の投稿</h2>
@@ -72,7 +70,6 @@
     </div>
 
     {% if not is_watcher %}
-    <!-- B(高齢者): 下部の大きなナビ -->
     <nav class="mm-nav">
       <div class="mm-nav-inner">
         <a href="{% url 'mimamori:index' %}" class="mm-nav-link mm-nav-active">
@@ -81,6 +78,65 @@
         </a>
       </div>
     </nav>
+        {% endif %}
+
+    {% if not is_watcher %}
+    <script>
+      (function () {
+        const POLL_INTERVAL_MS = 10000;
+        const WINDOW_MINUTES = 30;
+        const STORAGE_KEY = "notifiedTaskIds";
+        const API_URL = "{% url 'mimamori:recentAPI' %}";
+
+        function loadNotified() {
+          try {
+            return new Set(JSON.parse(sessionStorage.getItem(STORAGE_KEY) || "[]"));
+          } catch (e) {
+            return new Set();
+          }
+        }
+
+        function saveNotified(set) {
+          try {
+            sessionStorage.setItem(STORAGE_KEY, JSON.stringify([...set].slice(-100)));
+          } catch (e) {}
+        }
+
+        const notified = loadNotified();
+        let timerId = null;
+
+        async function checkTasks() {
+          try {
+            const res = await fetch(API_URL + "?minutes=" + WINDOW_MINUTES, {
+              credentials: "same-origin",
+            });
+
+            if (res.status === 401) {
+              clearInterval(timerId);
+              return;
+            }
+            if (!res.ok) return;
+
+            const data = await res.json();
+            if (!data.has_new) return;
+
+            const fresh = data.tasks.filter(function (t) {
+              return !notified.has(t.id);
+            });
+            if (fresh.length === 0) return;
+
+            fresh.forEach(function (t) { notified.add(t.id); });
+            saveNotified(notified);
+
+            alert("新しいお題が届きました。メニューから確認してください。");
+          } catch (e) {
+          }
+        }
+
+        checkTasks();
+        timerId = setInterval(checkTasks, POLL_INTERVAL_MS);
+      })();
+    </script>
     {% endif %}
 
   </div>

@@ -17,5 +17,6 @@ urlpatterns = [
     path('makePairAPI/', views.makePairAPI, name = "makePair"),
     path('invite/<str:token>', views.invite, name = "invite"),
     path('doTask/<int:taskId>', views.doTask, name = "doTask"),
-    path('pairLst', views.pair, name="pair")
+    path('pairLst', views.pair, name="pair"),
+    path("recentAPI/", views.recent_tasks, name="recentAPI"),
 ]
