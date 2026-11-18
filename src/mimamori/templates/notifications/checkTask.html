@@ -67,7 +67,7 @@
 
             const theme = document.createElement("span");
             theme.className = "task-theme";
-            theme.textContent = i.task_theme || "今日のタスク";
+            theme.textContent = i.task_theme || "今日のお題";
 
             const time = document.createElement("span");
             time.className = "task-time";
@@ -77,7 +77,7 @@
 
             const badge = document.createElement("span");
             badge.className = done ? "task-badge task-badge-done" : "task-badge";
-                        badge.textContent = done ? (i.skipped ? "お休み" : "済み") : "やる";
+                        badge.textContent = done ? (i.skipped ? "お休み" : "済み") : "開く";
 
             card.append(body, badge);
             li.appendChild(card);
