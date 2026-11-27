@@ -10,6 +10,7 @@ urlpatterns = [
     path('accounts/', include("accounts.urls")),
     path('mimamori/', include("mimamori.urls")),
     path("notifications/", include("notifications.urls")),
+    path("mypage/", include("mypage.urls")),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'mimamori',
     'accounts',
     'notifications',
+    'mypage',
     'cloudinary',
     'cloudinary_storage',
 ]
